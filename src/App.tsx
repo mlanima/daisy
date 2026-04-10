@@ -451,16 +451,6 @@ function App() {
         void persistSnapshot(next);
     };
 
-    const onUpdateSettings = (settings: AppStateSnapshot["settings"]) => {
-        const activeSnapshot = snapshotRef.current;
-
-        if (!activeSnapshot) {
-            return;
-        }
-
-        void persistSnapshot({ ...activeSnapshot, settings });
-    };
-
     const onUpdateAgents = (
         agents: Agent[],
         selectedAgentId: string | null,
@@ -488,10 +478,19 @@ function App() {
         });
     };
 
+    const onUpdateSettings = (settings: AppStateSnapshot["settings"]) => {
+        const activeSnapshot = snapshotRef.current;
+
+        if (!activeSnapshot) {
+            return;
+        }
+
+        void persistSnapshot({ ...activeSnapshot, settings });
+    };
+
     const onSaveApiKey = async (apiKey: string) => {
         try {
             await saveApiKey(apiKey);
-            // Refresh snapshot to include the saved API key
             const updated = await getAppState();
             setSnapshot(updated);
             snapshotRef.current = updated;
@@ -507,7 +506,6 @@ function App() {
     const onClearApiKey = async () => {
         try {
             await clearApiKey();
-            // Refresh snapshot to ensure cleared state is synchronized
             const updated = await getAppState();
             setSnapshot(updated);
             snapshotRef.current = updated;
@@ -617,18 +615,15 @@ function App() {
                     onSend={() => {
                         void sendCurrentPrompt();
                     }}
-                    onOpenSettings={() => setView("settings")}
+                    onUpdateAgents={onUpdateAgents}
                     onClearErrorDetails={() => setLastErrorDetails("")}
                 />
             ) : (
                 <SettingsPage
                     settings={snapshot.settings}
-                    agents={snapshot.agents}
-                    selectedAgentId={snapshot.selectedAgentId}
                     apiKeyPresent={apiKeyPresent}
                     onBack={() => setView("assistant")}
                     onUpdateSettings={onUpdateSettings}
-                    onUpdateAgents={onUpdateAgents}
                     onSaveApiKey={onSaveApiKey}
                     onClearApiKey={onClearApiKey}
                 />

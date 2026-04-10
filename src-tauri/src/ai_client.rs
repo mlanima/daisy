@@ -300,10 +300,16 @@ pub async fn run_chat_completion_stream(
 
     let mut full_response = String::new();
     let mut stream = response.bytes_stream();
+    let mut line_buffer = String::new();
+    let mut stream_finished = false;
 
     use futures_util::StreamExt;
 
-    while let Some(chunk_result) = stream.next().await {
+    while !stream_finished {
+        let Some(chunk_result) = stream.next().await else {
+            break;
+        };
+
         let chunk = chunk_result.map_err(|error| {
             format!(
                 "Failed to read stream chunk.\nendpoint: {}\nmodel: {}\nerror: {}",
@@ -311,13 +317,21 @@ pub async fn run_chat_completion_stream(
             )
         })?;
 
-        let chunk_str = String::from_utf8_lossy(&chunk);
+        line_buffer.push_str(&String::from_utf8_lossy(&chunk));
 
-        for line in chunk_str.lines() {
-            if line.starts_with("data: ") {
-                let data = &line[6..];
+        while let Some(newline_index) = line_buffer.find('\n') {
+            let mut line = line_buffer[..newline_index].to_string();
+            line_buffer.drain(..=newline_index);
+
+            if let Some(stripped) = line.strip_suffix('\r') {
+                line = stripped.to_string();
+            }
+
+            if let Some(data) = line.strip_prefix("data:") {
+                let data = data.trim_start();
 
                 if data == "[DONE]" {
+                    stream_finished = true;
                     break;
                 }
 

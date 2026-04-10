@@ -7,15 +7,31 @@ use tauri::{
 };
 
 const DOUBLE_COPY_WINDOW_MS: u128 = 650;
+const POST_POPUP_SUPPRESSION_MS: u128 = 450;
 const SELECTION_ANCHOR_TTL_MS: u128 = 8_000;
 
 pub fn start_listener(app_handle: AppHandle) {
     std::thread::spawn(move || {
         let mut ctrl_pressed = false;
         let mut c_pressed = false;
-        let mut last_copy_press: Option<Instant> = None;
+        let mut last_copy_chord: Option<Instant> = None;
+        let mut suppress_copy_until: Option<Instant> = None;
         let mut last_mouse_position: Option<(f64, f64)> = None;
         let mut last_selection_anchor: Option<(f64, f64, Instant)> = None;
+
+        let is_suppressed = |until: Option<Instant>| {
+            until.is_some_and(|value| Instant::now() < value)
+        };
+
+        let reset_copy_state = |
+            ctrl_pressed: &mut bool,
+            c_pressed: &mut bool,
+            last_copy_chord: &mut Option<Instant>,
+        | {
+            *ctrl_pressed = false;
+            *c_pressed = false;
+            *last_copy_chord = None;
+        };
 
         let listener_result = listen(move |event: Event| match event.event_type {
             EventType::KeyPress(key) => match key {
@@ -23,16 +39,52 @@ pub fn start_listener(app_handle: AppHandle) {
                     ctrl_pressed = true;
                 }
                 Key::KeyC if ctrl_pressed => {
-                    if c_pressed {
+                    if c_pressed || is_suppressed(suppress_copy_until) {
                         return;
                     }
 
                     c_pressed = true;
+                }
+                _ => {
+                    if ctrl_pressed && !is_suppressed(suppress_copy_until) {
+                        ctrl_pressed = false;
+                        c_pressed = false;
+                        last_copy_chord = None;
+                    }
+                }
+            },
+            EventType::KeyRelease(key) => match key {
+                Key::ControlLeft | Key::ControlRight => {
+                    ctrl_pressed = false;
+                    c_pressed = false;
+                }
+                Key::KeyC => {
+                    if !c_pressed {
+                        return;
+                    }
+
+                    c_pressed = false;
+
+                    if is_suppressed(suppress_copy_until) {
+                        return;
+                    }
+
                     let now = Instant::now();
 
-                    if let Some(previous_press) = last_copy_press {
-                        if now.duration_since(previous_press).as_millis() <= DOUBLE_COPY_WINDOW_MS {
-                            last_copy_press = None;
+                    if let Some(previous_chord) = last_copy_chord {
+                        if now.duration_since(previous_chord).as_millis() <= DOUBLE_COPY_WINDOW_MS {
+                            last_copy_chord = None;
+                            reset_copy_state(
+                                &mut ctrl_pressed,
+                                &mut c_pressed,
+                                &mut last_copy_chord,
+                            );
+                            suppress_copy_until = Some(
+                                Instant::now()
+                                    + std::time::Duration::from_millis(
+                                        POST_POPUP_SUPPRESSION_MS as u64,
+                                    ),
+                            );
                             let app = app_handle.clone();
                             let anchor_position = resolve_anchor_position(
                                 last_selection_anchor,
@@ -45,16 +97,7 @@ pub fn start_listener(app_handle: AppHandle) {
                         }
                     }
 
-                    last_copy_press = Some(now);
-                }
-                _ => {}
-            },
-            EventType::KeyRelease(key) => match key {
-                Key::ControlLeft | Key::ControlRight => {
-                    ctrl_pressed = false;
-                }
-                Key::KeyC => {
-                    c_pressed = false;
+                    last_copy_chord = Some(now);
                 }
                 _ => {}
             },

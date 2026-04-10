@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { createDraftAgent } from "../../domain/defaults";
-import type { Agent, AppSettings, WindowSize } from "../../domain/types";
+import type { AppSettings, WindowSize } from "../../domain/types";
 import { getApiKeyPreview } from "../../infrastructure/tauriClient";
 
 const WINDOW_SIZE_LABELS: Record<WindowSize, string> = {
@@ -11,27 +10,18 @@ const WINDOW_SIZE_LABELS: Record<WindowSize, string> = {
 
 interface SettingsPageProps {
     readonly settings: AppSettings;
-    readonly agents: Agent[];
-    readonly selectedAgentId: string | null;
     readonly apiKeyPresent: boolean;
     readonly onBack: () => void;
     readonly onUpdateSettings: (settings: AppSettings) => void;
-    readonly onUpdateAgents: (
-        agents: Agent[],
-        selectedAgentId: string | null,
-    ) => void;
     readonly onSaveApiKey: (apiKey: string) => Promise<void>;
     readonly onClearApiKey: () => Promise<void>;
 }
 
 export function SettingsPage({
     settings,
-    agents,
-    selectedAgentId,
     apiKeyPresent,
     onBack,
     onUpdateSettings,
-    onUpdateAgents,
     onSaveApiKey,
     onClearApiKey,
 }: SettingsPageProps) {
@@ -54,32 +44,6 @@ export function SettingsPage({
 
         void fetchPreview();
     }, [apiKeyPresent]);
-
-    const updateAgent = (agentId: string, updater: (agent: Agent) => Agent) => {
-        const nextAgents = agents.map((agent) =>
-            agent.id === agentId ? updater(agent) : agent,
-        );
-        onUpdateAgents(nextAgents, selectedAgentId);
-    };
-
-    const removeAgent = (agentId: string) => {
-        if (agents.length <= 1) {
-            return;
-        }
-
-        const nextAgents = agents.filter((agent) => agent.id !== agentId);
-        const nextSelectedId =
-            selectedAgentId === agentId
-                ? (nextAgents[0]?.id ?? null)
-                : selectedAgentId;
-
-        onUpdateAgents(nextAgents, nextSelectedId);
-    };
-
-    const addAgent = () => {
-        const newAgent = createDraftAgent();
-        onUpdateAgents([...agents, newAgent], newAgent.id);
-    };
 
     const saveKey = async () => {
         if (!apiKeyDraft.trim()) {
@@ -380,77 +344,6 @@ export function SettingsPage({
                     </div>
                 </div>
             )}
-
-            <section className="card agent-editor-card">
-                <header className="panel-header">
-                    <h3>Assistants (System Prompts)</h3>
-                    <button
-                        type="button"
-                        className="primary"
-                        onClick={addAgent}
-                    >
-                        Add Agent
-                    </button>
-                </header>
-
-                <div className="agent-edit-grid">
-                    {agents.map((agent) => (
-                        <article className="agent-edit-card" key={agent.id}>
-                            <div className="inline-row">
-                                <label htmlFor={`agent-name-${agent.id}`}>
-                                    Name
-                                </label>
-                                <button
-                                    type="button"
-                                    className="ghost danger"
-                                    disabled={agents.length <= 1}
-                                    onClick={() => removeAgent(agent.id)}
-                                >
-                                    Delete
-                                </button>
-                            </div>
-                            <input
-                                id={`agent-name-${agent.id}`}
-                                value={agent.name}
-                                onChange={(event) =>
-                                    updateAgent(agent.id, (current) => ({
-                                        ...current,
-                                        name: event.target.value,
-                                    }))
-                                }
-                            />
-
-                            <label htmlFor={`agent-description-${agent.id}`}>
-                                Description
-                            </label>
-                            <input
-                                id={`agent-description-${agent.id}`}
-                                value={agent.description}
-                                onChange={(event) =>
-                                    updateAgent(agent.id, (current) => ({
-                                        ...current,
-                                        description: event.target.value,
-                                    }))
-                                }
-                            />
-
-                            <label htmlFor={`agent-system-prompt-${agent.id}`}>
-                                System prompt
-                            </label>
-                            <textarea
-                                id={`agent-system-prompt-${agent.id}`}
-                                value={agent.systemPrompt}
-                                onChange={(event) =>
-                                    updateAgent(agent.id, (current) => ({
-                                        ...current,
-                                        systemPrompt: event.target.value,
-                                    }))
-                                }
-                            />
-                        </article>
-                    ))}
-                </div>
-            </section>
         </section>
     );
 }

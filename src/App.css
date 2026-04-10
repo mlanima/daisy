@@ -21,7 +21,9 @@
     --radius-lg: 18px;
     --radius-md: 12px;
     --radius-sm: 10px;
-    --transition: 180ms ease;
+    --transition: 160ms ease;
+    --transition-quick: 120ms ease;
+    --transition-smooth: 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
     color: var(--text-main);
     background:
         radial-gradient(circle at 8% 2%, #dfe6ff 0%, transparent 43%),
@@ -143,7 +145,6 @@ code {
     gap: 14px;
     width: min(var(--app-max-width), 100%);
     margin: 0 auto;
-    animation: shell-enter 320ms ease;
 }
 
 .app-header {
@@ -185,9 +186,10 @@ textarea {
     background: var(--bg-strong);
     transition:
         border-color var(--transition),
-        transform var(--transition),
+        transform var(--transition-quick),
         background-color var(--transition),
-        box-shadow var(--transition);
+        box-shadow var(--transition),
+        opacity var(--transition);
 }
 
 .tab,
@@ -227,6 +229,12 @@ button {
     min-height: min(74vh, 850px);
 }
 
+.assistant-workspace {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
 .left-panel,
 .main-panel,
 .card,
@@ -243,6 +251,11 @@ button {
     display: flex;
     flex-direction: column;
     gap: 12px;
+}
+
+.assistants-panel {
+    padding: 10px 14px;
+    width: 100%;
 }
 
 .panel-header {
@@ -267,12 +280,155 @@ button {
 }
 
 .agent-row {
+    width: 100%;
+    text-align: left;
+    padding: 8px 10px;
+}
+
+.assistants-fold {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--bg-strong);
+}
+
+.assistants-summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+    cursor: pointer;
+    padding: 10px 12px;
+}
+
+.assistants-summary::-webkit-details-marker {
+    display: none;
+}
+
+.assistants-summary h2 {
+    font-size: 1rem;
+}
+
+.assistants-summary::after {
+    content: "▸";
+    color: var(--text-soft);
+    font-size: 0.9rem;
+    transition: transform var(--transition);
+}
+
+.assistants-fold[open] > .assistants-summary::after {
+    transform: rotate(90deg);
+}
+
+.assistants-fold-content {
+    display: block;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-4px);
+    padding: 0 12px;
+    transition:
+        max-height 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        opacity 140ms ease,
+        transform 140ms ease,
+        padding 140ms ease;
+}
+
+.assistants-fold[open] > .assistants-fold-content {
+    max-height: 1600px;
+    opacity: 1;
+    transform: translateY(0);
+    padding: 2px 12px 12px;
+}
+
+.assistants-panel .agent-list {
+    overflow: visible;
+    max-height: none;
+}
+
+.assistants-fold .panel-header p {
+    color: var(--text-soft);
+    font-size: 0.85rem;
+}
+
+.accordion-list {
+    margin-top: 10px;
+}
+
+.agent-accordion {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--bg-soft);
+}
+
+.agent-accordion.active {
+    border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
+    background: color-mix(in srgb, var(--accent) 10%, var(--bg-strong));
+}
+
+.agent-accordion-summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 10px 12px;
+}
+
+.agent-accordion-summary::-webkit-details-marker {
+    display: none;
+}
+
+.agent-accordion-summary::after {
+    content: "▸";
+    color: var(--text-soft);
+    font-size: 0.85rem;
+    transition: transform var(--transition);
+}
+
+.agent-accordion[open] > .agent-accordion-summary::after {
+    transform: rotate(90deg);
+}
+
+.agent-accordion-content {
+    display: block;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-3px);
+    padding: 0 10px;
+    transition:
+        max-height 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        opacity 140ms ease,
+        transform 140ms ease,
+        padding 140ms ease;
+}
+
+.agent-accordion[open] > .agent-accordion-content {
+    max-height: 1200px;
+    opacity: 1;
+    transform: translateY(0);
+    padding: 0 10px 10px;
+}
+
+.agent-manage-grid {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
-    text-align: left;
-    padding: 10px 12px;
+    gap: 8px;
+}
+
+.agent-manage-grid label {
+    font-size: 0.84rem;
+    color: var(--text-soft);
+}
+
+.agent-manage-grid textarea {
+    min-height: 120px;
+}
+
+.agent-manage-actions {
+    display: flex;
+    justify-content: flex-end;
 }
 
 .agent-row.active {
@@ -283,11 +439,6 @@ button {
 .agent-name {
     font-size: 0.95rem;
     font-weight: 600;
-}
-
-.agent-description {
-    font-size: 0.8rem;
-    color: var(--text-soft);
 }
 
 .main-panel {
@@ -321,10 +472,29 @@ button {
 
 .panel-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: 12px;
     min-height: 0;
     flex: 1;
+    position: relative;
+}
+
+.prompt-card {
+    min-height: 320px;
+}
+
+.response-popup {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    width: min(46%, 560px);
+    max-height: min(65vh, 560px);
+    z-index: 3;
+    will-change: transform, opacity;
+}
+
+.response-popup pre {
+    max-height: min(42vh, 340px);
 }
 
 .card {
@@ -529,7 +699,7 @@ select:focus-visible,
 @keyframes shell-enter {
     from {
         opacity: 0;
-        transform: translateY(6px);
+        transform: translateY(10px);
     }
     to {
         opacity: 1;
@@ -550,6 +720,16 @@ select:focus-visible,
     .settings-grid,
     .agent-edit-grid {
         grid-template-columns: 1fr;
+    }
+
+    .response-popup {
+        position: static;
+        width: 100%;
+        max-height: none;
+    }
+
+    .response-popup pre {
+        max-height: 280px;
     }
 }
 
