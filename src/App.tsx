@@ -12,7 +12,8 @@ import {
     getLatestClipboardCapture,
     openMainWindow,
     onClipboardCaptured,
-    runAgent,
+    runAgentStream,
+    onAiStreamChunk,
     saveApiKey,
     saveAppState,
 } from "./infrastructure/tauriClient";
@@ -261,25 +262,33 @@ function App() {
         setIsSending(true);
         setStatus({ tone: "idle", message: "" });
         setLastErrorDetails("");
+        setResponseText("");
+
+        let chunkListenerUnlisten: (() => void) | null = null;
 
         try {
-            const result = await runAgent({
+            chunkListenerUnlisten = await onAiStreamChunk((chunk) => {
+                setResponseText((prev) => prev + chunk);
+            });
+
+            await runAgentStream({
                 agentId,
                 sourceText: overrides?.sourceText ?? sourceRef.current,
                 promptOverride: promptToSend,
             });
 
-            setPromptText(result.promptUsed);
-            setResponseText(result.outputText);
             setStatus({
                 tone: "success",
-                message: `Response generated with ${result.model}.`,
+                message: `Response generated.`,
             });
             setLastErrorDetails("");
         } catch (error) {
             setStatus({ tone: "error", message: extractErrorMessage(error) });
             setLastErrorDetails(extractErrorDetails(error));
         } finally {
+            if (chunkListenerUnlisten) {
+                chunkListenerUnlisten();
+            }
             isSendingRef.current = false;
             setIsSending(false);
         }

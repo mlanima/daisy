@@ -2,6 +2,7 @@ use crate::models::{AiRunResponse, ModelConfig, TokenUsage};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
+use tauri::Emitter;
 
 #[derive(Debug, Serialize)]
 struct ChatRequest<'a> {
@@ -203,4 +204,143 @@ fn summarize_response_body(text: &str) -> String {
     }
 
     body
+}
+
+#[derive(Debug, Deserialize)]
+struct StreamChoiceDelta {
+    content: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct StreamChoice {
+    delta: StreamChoiceDelta,
+}
+
+#[derive(Debug, Deserialize)]
+struct StreamEvent {
+    choices: Option<Vec<StreamChoice>>,
+}
+
+pub async fn run_chat_completion_stream(
+    emitter: &tauri::AppHandle,
+    api_key: &str,
+    endpoint: &str,
+    model_config: &ModelConfig,
+    system_prompt: Option<&str>,
+    user_prompt: &str,
+) -> Result<(), String> {
+    let http_client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(120))
+        .build()
+        .map_err(|error| format!("Failed to build HTTP client: {error}"))?;
+
+    let mut messages = Vec::with_capacity(2);
+    if let Some(system_prompt) = system_prompt {
+        if !system_prompt.trim().is_empty() {
+            messages.push(ChatMessage {
+                role: "system",
+                content: system_prompt,
+            });
+        }
+    }
+
+    messages.push(ChatMessage {
+        role: "user",
+        content: user_prompt,
+    });
+
+    // Enable streaming by adding stream field
+    #[derive(Debug, Serialize)]
+    struct StreamingChatRequest<'a> {
+        model: &'a str,
+        messages: Vec<ChatMessage<'a>>,
+        temperature: f32,
+        stream: bool,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        max_tokens: Option<u32>,
+    }
+
+    let stream_payload = StreamingChatRequest {
+        model: &model_config.model,
+        messages,
+        temperature: model_config.temperature,
+        max_tokens: model_config.max_tokens,
+        stream: true,
+    };
+
+    let response = http_client
+        .post(endpoint)
+        .bearer_auth(api_key)
+        .json(&stream_payload)
+        .send()
+        .await
+        .map_err(|error| {
+            format!(
+                "Failed to call AI API.\nendpoint: {}\nmodel: {}\ntransportError: {}",
+                endpoint, model_config.model, error
+            )
+        })?;
+
+    let status = response.status();
+
+    if !status.is_success() {
+        let response_text = response
+            .text()
+            .await
+            .unwrap_or_else(|_| "<failed to read error>".to_string());
+
+        return Err(build_http_error(
+            status,
+            endpoint,
+            &model_config.model,
+            None,
+            &response_text,
+        ));
+    }
+
+    let mut full_response = String::new();
+    let mut stream = response.bytes_stream();
+
+    use futures_util::StreamExt;
+
+    while let Some(chunk_result) = stream.next().await {
+        let chunk = chunk_result.map_err(|error| {
+            format!(
+                "Failed to read stream chunk.\nendpoint: {}\nmodel: {}\nerror: {}",
+                endpoint, model_config.model, error
+            )
+        })?;
+
+        let chunk_str = String::from_utf8_lossy(&chunk);
+
+        for line in chunk_str.lines() {
+            if line.starts_with("data: ") {
+                let data = &line[6..];
+
+                if data == "[DONE]" {
+                    break;
+                }
+
+                if let Ok(event) = serde_json::from_str::<StreamEvent>(data) {
+                    if let Some(choices) = event.choices {
+                        if let Some(choice) = choices.first() {
+                            if let Some(content) = &choice.delta.content {
+                                full_response.push_str(content);
+                                let _ = emitter.emit("ai-stream-chunk", content.clone());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if full_response.trim().is_empty() {
+        return Err(format!(
+            "AI API returned an empty response.\nendpoint: {}\nmodel: {}",
+            endpoint, model_config.model,
+        ));
+    }
+
+    Ok(())
 }

@@ -31,6 +31,10 @@ export async function runAgent(
     return invoke<AiRunResponse>("run_agent", { request });
 }
 
+export async function runAgentStream(request: RunAgentRequest): Promise<void> {
+    return invoke("run_agent_stream", { request });
+}
+
 export async function saveApiKey(apiKey: string): Promise<void> {
     return invoke("save_api_key", { apiKey });
 }
@@ -76,5 +80,17 @@ export async function onClipboardCaptured(
         }
 
         handler(event.payload);
+    });
+}
+
+const AI_STREAM_CHUNK_EVENT = "ai-stream-chunk";
+
+export async function onAiStreamChunk(
+    handler: (chunk: string) => void,
+): Promise<UnlistenFn> {
+    return listen<string>(AI_STREAM_CHUNK_EVENT, (event) => {
+        if (event.payload) {
+            handler(event.payload);
+        }
     });
 }

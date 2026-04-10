@@ -215,6 +215,71 @@ async fn run_agent(
     })
 }
 
+#[tauri::command]
+async fn run_agent_stream(
+    app: tauri::AppHandle,
+    store: State<'_, StateStore>,
+    request: RunAgentRequest,
+) -> Result<(), String> {
+    let snapshot = store.get()?;
+
+    let agent = snapshot
+        .agents
+        .iter()
+        .find(|agent| agent.id == request.agent_id)
+        .ok_or_else(|| "Agent not found.".to_string())?
+        .clone();
+
+    let user_prompt = request
+        .prompt_override
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or(request.source_text)
+        .trim()
+        .to_string();
+
+    if user_prompt.is_empty() {
+        return Err("Prompt cannot be empty.".to_string());
+    }
+
+    let fallback_api_key = snapshot.api_key.as_deref();
+    let api_key = secure_store::read_api_key(fallback_api_key)?;
+    let endpoint = snapshot.settings.api_base_url.trim().to_string();
+    let model_config = snapshot.settings.model.clone();
+
+    if endpoint.is_empty() {
+        return Err("API endpoint cannot be empty. Update settings first.".to_string());
+    }
+
+    let system_prompt = agent.system_prompt.replace("{text}", "");
+    let system_prompt = system_prompt.trim().to_string();
+    let system_prompt = if system_prompt.is_empty() {
+        None
+    } else {
+        Some(system_prompt)
+    };
+
+    ai_client::run_chat_completion_stream(
+        &app,
+        &api_key,
+        &endpoint,
+        &model_config,
+        system_prompt.as_deref(),
+        &user_prompt,
+    )
+    .await
+    .map_err(|error| {
+        format!(
+            "Failed to generate answer.\nagentId: {}\nendpoint: {}\nmodel: {}\nsystemPromptChars: {}\nuserPromptChars: {}\ndetails: {}",
+            agent.id,
+            endpoint,
+            model_config.model,
+            agent.system_prompt.chars().count(),
+            user_prompt.chars().count(),
+            error,
+        )
+    })
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -291,7 +356,8 @@ pub fn run() {
             get_latest_clipboard_capture,
             open_main_window,
             resize_quick_window,
-            run_agent
+            run_agent,
+            run_agent_stream
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
