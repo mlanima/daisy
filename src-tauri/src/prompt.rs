@@ -16,3 +16,14 @@ pub fn build_prompt(template: &str, source_text: &str) -> String {
 
     format!("{}\n\n{}", normalized_template, normalized_text)
 }
+
+pub fn normalized_system_prompt(template: &str) -> Option<String> {
+    let normalized = template.replace("{text}", "");
+    let normalized = normalized.trim();
+
+    if normalized.is_empty() {
+        None
+    } else {
+        Some(normalized.to_string())
+    }
+}

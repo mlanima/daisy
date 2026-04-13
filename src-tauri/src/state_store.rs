@@ -1,6 +1,6 @@
 use crate::models::{AppStateSnapshot, ClipboardCapturedEvent};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::{AppHandle, Manager};
 
@@ -27,7 +27,7 @@ impl StateStore {
         })
     }
 
-    fn load_snapshot(path: &PathBuf) -> AppStateSnapshot {
+    fn load_snapshot(path: &Path) -> AppStateSnapshot {
         let file_content = match fs::read_to_string(path) {
             Ok(value) => value,
             Err(_) => return AppStateSnapshot::default(),
@@ -44,19 +44,20 @@ impl StateStore {
     }
 
     pub fn save(&self, new_snapshot: AppStateSnapshot) -> Result<AppStateSnapshot, String> {
+        let mut snapshot = self
+            .snapshot
+            .lock()
+            .map_err(|error| format!("Failed to lock app state: {error}"))?;
+
         let serialized = serde_json::to_string_pretty(&new_snapshot)
             .map_err(|error| format!("Failed to serialize app state: {error}"))?;
 
         fs::write(&self.file_path, serialized)
             .map_err(|error| format!("Failed to persist app state: {error}"))?;
 
-        self.snapshot
-            .lock()
-            .map_err(|error| format!("Failed to lock app state: {error}"))
-            .map(|mut snapshot| {
-                *snapshot = new_snapshot.clone();
-                new_snapshot
-            })
+        *snapshot = new_snapshot.clone();
+
+        Ok(new_snapshot)
     }
 
     pub fn set_latest_clipboard_capture(

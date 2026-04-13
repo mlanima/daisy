@@ -1,8 +1,30 @@
 use crate::models::{AiRunResponse, ModelConfig, TokenUsage};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
+use std::sync::OnceLock;
 use std::time::Duration;
 use tauri::Emitter;
+
+const CHAT_TIMEOUT_SECS: u64 = 45;
+const STREAM_TIMEOUT_SECS: u64 = 120;
+
+static HTTP_CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
+
+fn http_client() -> Result<&'static reqwest::Client, String> {
+    if let Some(client) = HTTP_CLIENT.get() {
+        return Ok(client);
+    }
+
+    let built = reqwest::Client::builder()
+        .build()
+        .map_err(|error| format!("Failed to build HTTP client: {error}"))?;
+
+    let _ = HTTP_CLIENT.set(built);
+
+    HTTP_CLIENT
+        .get()
+        .ok_or_else(|| "Failed to initialize HTTP client.".to_string())
+}
 
 #[derive(Debug, Serialize)]
 struct ChatRequest<'a> {
@@ -51,10 +73,7 @@ pub async fn run_chat_completion(
     system_prompt: Option<&str>,
     user_prompt: &str,
 ) -> Result<AiRunResponse, String> {
-    let http_client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(45))
-        .build()
-        .map_err(|error| format!("Failed to build HTTP client: {error}"))?;
+    let http_client = http_client()?;
 
     let mut messages = Vec::with_capacity(2);
     if let Some(system_prompt) = system_prompt {
@@ -82,6 +101,7 @@ pub async fn run_chat_completion(
         .post(endpoint)
         .bearer_auth(api_key)
         .json(&request_payload)
+        .timeout(Duration::from_secs(CHAT_TIMEOUT_SECS))
         .send()
         .await
         .map_err(|error| {
@@ -229,10 +249,7 @@ pub async fn run_chat_completion_stream(
     system_prompt: Option<&str>,
     user_prompt: &str,
 ) -> Result<(), String> {
-    let http_client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(120))
-        .build()
-        .map_err(|error| format!("Failed to build HTTP client: {error}"))?;
+    let http_client = http_client()?;
 
     let mut messages = Vec::with_capacity(2);
     if let Some(system_prompt) = system_prompt {
@@ -272,6 +289,7 @@ pub async fn run_chat_completion_stream(
         .post(endpoint)
         .bearer_auth(api_key)
         .json(&stream_payload)
+        .timeout(Duration::from_secs(STREAM_TIMEOUT_SECS))
         .send()
         .await
         .map_err(|error| {

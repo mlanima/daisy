@@ -12,44 +12,42 @@ pub fn save_api_key(api_key: &str) -> Result<(), String> {
     }
 
     let entry = api_entry()?;
-    
+
     // Try to save to keyring, but don't fail if it doesn't work
-    let _keyring_result = entry.set_password(api_key.trim());
-    
+    let _ = entry.set_password(api_key.trim());
+
     // We'll also store to state file as fallback (handled by the caller)
     Ok(())
 }
 
 pub fn read_api_key(fallback_state: Option<&str>) -> Result<String, String> {
     let entry = api_entry()?;
-    
+
     // Try keyring first
     if let Ok(password) = entry.get_password() {
         if !password.trim().is_empty() {
             return Ok(password);
         }
     }
-    
+
     // Fall back to stored state if keyring fails
     if let Some(key) = fallback_state {
         if !key.trim().is_empty() {
             return Ok(key.to_string());
         }
     }
-    
+
     Err("API key is missing or unreadable: No entry found in secure storage or local storage.".to_string())
 }
 
 pub fn has_api_key(fallback_state: Option<&str>) -> Result<bool, String> {
     let entry = api_entry()?;
+    let fallback_has_value = fallback_state.is_some_and(|key| !key.trim().is_empty());
 
     match entry.get_password() {
         Ok(value) => Ok(!value.trim().is_empty()),
-        Err(keyring::Error::NoEntry) => {
-            // Check fallback state
-            Ok(fallback_state.map_or(false, |key| !key.trim().is_empty()))
-        }
-        Err(error) => Err(format!("Failed to check API key: {error}")),
+        // If the keyring backend is unavailable or no entry exists, trust fallback state.
+        Err(_) => Ok(fallback_has_value),
     }
 }
 
@@ -80,7 +78,9 @@ pub fn read_api_key_preview(fallback_state: Option<&str>) -> Result<String, Stri
             } else if trimmed.len() <= 4 {
                 Ok("***...".to_string())
             } else {
-                let last4 = &trimmed[trimmed.len() - 4..];
+                let mut last4_chars = trimmed.chars().rev().take(4).collect::<Vec<_>>();
+                last4_chars.reverse();
+                let last4: String = last4_chars.into_iter().collect();
                 Ok(format!("***...{}", last4))
             }
         }

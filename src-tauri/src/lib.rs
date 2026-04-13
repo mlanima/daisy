@@ -1,10 +1,11 @@
 mod ai_client;
 mod clipboard_listener;
 mod models;
+mod prompt;
 mod secure_store;
 mod state_store;
 
-use models::{AiRunResponse, AppStateSnapshot, RunAgentRequest};
+use models::{AiRunResponse, AppStateSnapshot, ModelConfig, RunAgentRequest};
 use serde::Serialize;
 use state_store::StateStore;
 use tauri::{
@@ -20,6 +21,78 @@ struct QuickWindowResizeResult {
     width: f64,
     height: f64,
     is_height_clamped: bool,
+}
+
+struct PreparedAgentRunContext {
+    agent_id: String,
+    endpoint: String,
+    model_config: ModelConfig,
+    system_prompt: Option<String>,
+    system_prompt_chars: usize,
+    user_prompt: String,
+    user_prompt_chars: usize,
+    api_key: String,
+}
+
+fn resolve_user_prompt(request: RunAgentRequest) -> Result<String, String> {
+    let prompt_source = request
+        .prompt_override
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or(request.source_text);
+    let user_prompt = prompt::build_prompt("", &prompt_source);
+
+    if user_prompt.is_empty() {
+        return Err("Prompt cannot be empty.".to_string());
+    }
+
+    Ok(user_prompt)
+}
+
+fn prepare_agent_run_context(
+    store: &StateStore,
+    request: RunAgentRequest,
+) -> Result<PreparedAgentRunContext, String> {
+    let snapshot = store.get()?;
+
+    let agent = snapshot
+        .agents
+        .iter()
+        .find(|agent| agent.id == request.agent_id)
+        .ok_or_else(|| "Agent not found.".to_string())?;
+
+    let user_prompt = resolve_user_prompt(request)?;
+    let endpoint = snapshot.settings.api_base_url.trim().to_string();
+
+    if endpoint.is_empty() {
+        return Err("API endpoint cannot be empty. Update settings first.".to_string());
+    }
+
+    let fallback_api_key = snapshot.api_key.as_deref();
+    let api_key = secure_store::read_api_key(fallback_api_key)?;
+    let system_prompt = prompt::normalized_system_prompt(&agent.system_prompt);
+
+    Ok(PreparedAgentRunContext {
+        agent_id: agent.id.clone(),
+        endpoint,
+        model_config: snapshot.settings.model.clone(),
+        system_prompt_chars: agent.system_prompt.chars().count(),
+        user_prompt_chars: user_prompt.chars().count(),
+        user_prompt,
+        system_prompt,
+        api_key,
+    })
+}
+
+fn format_agent_run_error(context: &PreparedAgentRunContext, details: &str) -> String {
+    format!(
+        "Failed to generate answer.\nagentId: {}\nendpoint: {}\nmodel: {}\nsystemPromptChars: {}\nuserPromptChars: {}\ndetails: {}",
+        context.agent_id,
+        context.endpoint,
+        context.model_config.model,
+        context.system_prompt_chars,
+        context.user_prompt_chars,
+        details,
+    )
 }
 
 fn show_main_window(app: &tauri::AppHandle) {
@@ -157,62 +230,17 @@ async fn run_agent(
     store: State<'_, StateStore>,
     request: RunAgentRequest,
 ) -> Result<AiRunResponse, String> {
-    let snapshot = store.get()?;
-
-    let agent = snapshot
-        .agents
-        .iter()
-        .find(|agent| agent.id == request.agent_id)
-        .ok_or_else(|| "Agent not found.".to_string())?
-        .clone();
-
-    let user_prompt = request
-        .prompt_override
-        .filter(|value| !value.trim().is_empty())
-        .unwrap_or(request.source_text)
-        .trim()
-        .to_string();
-
-    if user_prompt.is_empty() {
-        return Err("Prompt cannot be empty.".to_string());
-    }
-
-    let fallback_api_key = snapshot.api_key.as_deref();
-    let api_key = secure_store::read_api_key(fallback_api_key)?;
-    let endpoint = snapshot.settings.api_base_url.trim();
-    let model_config = snapshot.settings.model;
-
-    if endpoint.is_empty() {
-        return Err("API endpoint cannot be empty. Update settings first.".to_string());
-    }
-
-    let system_prompt = agent.system_prompt.replace("{text}", "");
-    let system_prompt = system_prompt.trim().to_string();
-    let system_prompt = if system_prompt.is_empty() {
-        None
-    } else {
-        Some(system_prompt.as_str())
-    };
+    let context = prepare_agent_run_context(&store, request)?;
 
     ai_client::run_chat_completion(
-        &api_key,
-        endpoint,
-        &model_config,
-        system_prompt,
-        &user_prompt,
+        &context.api_key,
+        &context.endpoint,
+        &context.model_config,
+        context.system_prompt.as_deref(),
+        &context.user_prompt,
     )
     .await
-    .map_err(|error| {
-        format!(
-            "Failed to generate answer.\nagentId: {}\nendpoint: {}\nmodel: {}\nsystemPromptChars: {}\nuserPromptChars: {}\ndetails: {}",
-            agent.id,
-            endpoint,
-            model_config.model,
-            agent.system_prompt.chars().count(),
-            user_prompt.chars().count(),
-            error,
-        )
-    })
+    .map_err(|error| format_agent_run_error(&context, &error))
 }
 
 #[tauri::command]
@@ -221,63 +249,18 @@ async fn run_agent_stream(
     store: State<'_, StateStore>,
     request: RunAgentRequest,
 ) -> Result<(), String> {
-    let snapshot = store.get()?;
-
-    let agent = snapshot
-        .agents
-        .iter()
-        .find(|agent| agent.id == request.agent_id)
-        .ok_or_else(|| "Agent not found.".to_string())?
-        .clone();
-
-    let user_prompt = request
-        .prompt_override
-        .filter(|value| !value.trim().is_empty())
-        .unwrap_or(request.source_text)
-        .trim()
-        .to_string();
-
-    if user_prompt.is_empty() {
-        return Err("Prompt cannot be empty.".to_string());
-    }
-
-    let fallback_api_key = snapshot.api_key.as_deref();
-    let api_key = secure_store::read_api_key(fallback_api_key)?;
-    let endpoint = snapshot.settings.api_base_url.trim().to_string();
-    let model_config = snapshot.settings.model.clone();
-
-    if endpoint.is_empty() {
-        return Err("API endpoint cannot be empty. Update settings first.".to_string());
-    }
-
-    let system_prompt = agent.system_prompt.replace("{text}", "");
-    let system_prompt = system_prompt.trim().to_string();
-    let system_prompt = if system_prompt.is_empty() {
-        None
-    } else {
-        Some(system_prompt)
-    };
+    let context = prepare_agent_run_context(&store, request)?;
 
     ai_client::run_chat_completion_stream(
         &app,
-        &api_key,
-        &endpoint,
-        &model_config,
-        system_prompt.as_deref(),
-        &user_prompt,
+        &context.api_key,
+        &context.endpoint,
+        &context.model_config,
+        context.system_prompt.as_deref(),
+        &context.user_prompt,
     )
     .await
-    .map_err(|error| {
-        format!(
-            "Failed to generate answer.\nagentId: {}\nendpoint: {}\nmodel: {}\nsystemPromptChars: {}\nuserPromptChars: {}\ndetails: {}",
-            agent.id,
-            endpoint,
-            model_config.model,
-            agent.system_prompt.chars().count(),
-            user_prompt.chars().count(),
-            error,
-        )
-    })
+    .map_err(|error| format_agent_run_error(&context, &error))
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
