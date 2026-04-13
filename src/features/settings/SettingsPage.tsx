@@ -1,7 +1,26 @@
+import { useFormStatus } from "react-dom";
 import { Button, Card, SwitchField } from "../../shared/components";
 import { WINDOW_SIZE_LABELS } from "./windowSizeLabels";
 import { useSettingsApiKey } from "./useSettingsApiKey";
 import type { SettingsPageProps } from "./types";
+
+interface SaveKeyButtonProps {
+    canSubmit: boolean;
+}
+
+function SaveKeyButton({ canSubmit }: Readonly<SaveKeyButtonProps>) {
+    const { pending } = useFormStatus();
+
+    return (
+        <Button
+            variant="primary"
+            type="submit"
+            disabled={pending || !canSubmit}
+        >
+            {pending ? "Saving..." : "Save"}
+        </Button>
+    );
+}
 
 export function SettingsPage({
     settings,
@@ -18,10 +37,11 @@ export function SettingsPage({
         keyPreview,
         showKeyModal,
         showAdvanced,
+        saveError,
         openKeyModal,
         closeKeyModal,
         toggleAdvanced,
-        saveKey,
+        saveKeyAction,
         clearKey,
     } = useSettingsApiKey({
         apiKeyPresent,
@@ -235,48 +255,59 @@ export function SettingsPage({
                     <div className="modal-content">
                         <h2>Set Secret Key</h2>
 
-                        <label htmlFor="modal-api-key">API Key</label>
-                        <input
-                            id="modal-api-key"
-                            type="password"
-                            value={apiKeyDraft}
-                            onChange={(event) =>
-                                setApiKeyDraft(event.target.value)
-                            }
-                            placeholder="sk-..."
-                            autoFocus
-                        />
+                        <form action={saveKeyAction}>
+                            <label htmlFor="modal-api-key">API Key</label>
+                            <input
+                                id="modal-api-key"
+                                name="apiKey"
+                                type="password"
+                                value={apiKeyDraft}
+                                onChange={(event) =>
+                                    setApiKeyDraft(event.target.value)
+                                }
+                                placeholder="sk-..."
+                                autoFocus
+                            />
 
-                        <label htmlFor="modal-api-endpoint">API Endpoint</label>
-                        <input
-                            id="modal-api-endpoint"
-                            type="url"
-                            value={settings.apiBaseUrl}
-                            onChange={(event) =>
-                                onUpdateSettings({
-                                    ...settings,
-                                    apiBaseUrl: event.target.value,
-                                })
-                            }
-                            placeholder="https://api.openai.com/v1/chat/completions"
-                        />
+                            <label htmlFor="modal-api-endpoint">
+                                API Endpoint
+                            </label>
+                            <input
+                                id="modal-api-endpoint"
+                                type="url"
+                                value={settings.apiBaseUrl}
+                                onChange={(event) =>
+                                    onUpdateSettings({
+                                        ...settings,
+                                        apiBaseUrl: event.target.value,
+                                    })
+                                }
+                                placeholder="https://api.openai.com/v1/chat/completions"
+                            />
 
-                        <div className="modal-actions">
-                            <Button
-                                variant="ghost"
-                                onClick={closeKeyModal}
-                                disabled={isSavingKey}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                variant="primary"
-                                onClick={saveKey}
-                                disabled={isSavingKey || !apiKeyDraft.trim()}
-                            >
-                                {isSavingKey ? "Saving..." : "Save"}
-                            </Button>
-                        </div>
+                            {saveError ? (
+                                <p
+                                    role="alert"
+                                    style={{ color: "var(--danger)" }}
+                                >
+                                    {saveError}
+                                </p>
+                            ) : null}
+
+                            <div className="modal-actions">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={closeKeyModal}
+                                    disabled={isSavingKey}
+                                >
+                                    Cancel
+                                </Button>
+                                <SaveKeyButton
+                                    canSubmit={Boolean(apiKeyDraft.trim())}
+                                />
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

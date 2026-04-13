@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useActionState, useEffect, useOptimistic, useState } from "react";
+import { apiKeySchema } from "../../shared/schemas/appStateSchema";
 import { fetchApiKeyPreview } from "./settingsService";
 
 interface UseSettingsApiKeyParams {
@@ -7,81 +8,117 @@ interface UseSettingsApiKeyParams {
     onClearApiKey: () => Promise<void>;
 }
 
+interface SaveApiKeyActionState {
+    error: string | null;
+}
+
+const INITIAL_SAVE_STATE: SaveApiKeyActionState = {
+    error: null,
+};
+
 export function useSettingsApiKey({
     apiKeyPresent,
     onSaveApiKey,
     onClearApiKey,
 }: UseSettingsApiKeyParams) {
     const [apiKeyDraft, setApiKeyDraft] = useState("");
-    const [isSavingKey, setIsSavingKey] = useState(false);
+    const [isClearingKey, setIsClearingKey] = useState(false);
     const [keyPreview, setKeyPreview] = useState("<loading>");
     const [showKeyModal, setShowKeyModal] = useState(false);
     const [showAdvanced, setShowAdvanced] = useState(false);
+    const [displayKeyPreview, setOptimisticKeyPreview] = useOptimistic(
+        keyPreview,
+        (_currentPreview, nextPreview: string) => nextPreview,
+    );
 
-    const refreshPreview = useCallback(async () => {
+    const refreshPreview = async () => {
         try {
             const preview = await fetchApiKeyPreview();
             setKeyPreview(preview);
         } catch {
             setKeyPreview("<error checking>");
         }
-    }, []);
+    };
 
-    useEffect(() => {
-        void refreshPreview();
-    }, [apiKeyPresent, refreshPreview]);
+    const [saveState, saveKeyAction, isSavingKey] = useActionState<
+        SaveApiKeyActionState,
+        FormData
+    >(async (_previousState, formData) => {
+        const apiKeyField = formData.get("apiKey");
+        const parsedApiKey = apiKeySchema.safeParse(apiKeyField);
 
-    const saveKey = useCallback(async () => {
-        const nextKey = apiKeyDraft.trim();
-
-        if (!nextKey) {
-            return;
+        if (!parsedApiKey.success) {
+            return {
+                error:
+                    parsedApiKey.error.issues[0]?.message ??
+                    "API key is required.",
+            };
         }
 
-        setIsSavingKey(true);
+        const nextKey = parsedApiKey.data;
+
+        setOptimisticKeyPreview("<saving>");
+
         try {
             await onSaveApiKey(nextKey);
             setApiKeyDraft("");
             setShowKeyModal(false);
             await refreshPreview();
-        } finally {
-            setIsSavingKey(false);
-        }
-    }, [apiKeyDraft, onSaveApiKey, refreshPreview]);
 
-    const clearKey = useCallback(async () => {
-        setIsSavingKey(true);
+            return {
+                error: null,
+            };
+        } catch {
+            setOptimisticKeyPreview("<error checking>");
+
+            return {
+                error: "Failed to save API key.",
+            };
+        }
+    }, INITIAL_SAVE_STATE);
+
+    useEffect(() => {
+        void refreshPreview();
+    }, [apiKeyPresent]);
+
+    const clearKey = async () => {
+        setIsClearingKey(true);
+        setOptimisticKeyPreview("<not found>");
+
         try {
             await onClearApiKey();
             setKeyPreview("<not found>");
+        } catch {
+            setOptimisticKeyPreview("<error checking>");
         } finally {
-            setIsSavingKey(false);
+            setIsClearingKey(false);
         }
-    }, [onClearApiKey]);
+    };
 
-    const openKeyModal = useCallback(() => {
+    const openKeyModal = () => {
         setShowKeyModal(true);
-    }, []);
+    };
 
-    const closeKeyModal = useCallback(() => {
+    const closeKeyModal = () => {
         setShowKeyModal(false);
-    }, []);
+    };
 
-    const toggleAdvanced = useCallback(() => {
+    const toggleAdvanced = () => {
         setShowAdvanced((value) => !value);
-    }, []);
+    };
 
     return {
         apiKeyDraft,
         setApiKeyDraft,
-        isSavingKey,
-        keyPreview,
+        isSavingKey: isSavingKey || isClearingKey,
+        keyPreview: displayKeyPreview,
         showKeyModal,
         showAdvanced,
+        saveError: saveState.error,
         openKeyModal,
         closeKeyModal,
         toggleAdvanced,
-        saveKey,
+        saveKeyAction,
         clearKey,
     };
 }

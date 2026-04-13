@@ -1,8 +1,11 @@
 import type { AppStateSnapshot } from "../../shared/types/appState";
+import type { StatusTone } from "../../shared/types/feedback";
+import {
+    defaultSettingsFlowDependencies,
+    type SettingsFlowDependencies,
+} from "./settingsFlowDependencies";
 import { useSettingsApiKeyFlow } from "./useSettingsApiKeyFlow";
 import { useSettingsUpdateFlow } from "./useSettingsUpdateFlow";
-
-type StatusTone = "idle" | "success" | "error";
 
 interface UseSettingsFlowParams {
     getSnapshot: () => AppStateSnapshot | null;
@@ -13,6 +16,7 @@ interface UseSettingsFlowParams {
     setApiKeyPresent: (value: boolean) => void;
     clearErrorDetails: () => void;
     reportError: (error: unknown, prefix?: string) => void;
+    dependencies?: SettingsFlowDependencies;
 }
 
 export function useSettingsFlow({
@@ -24,7 +28,10 @@ export function useSettingsFlow({
     setApiKeyPresent,
     clearErrorDetails,
     reportError,
+    dependencies,
 }: UseSettingsFlowParams) {
+    const activeDependencies = dependencies ?? defaultSettingsFlowDependencies;
+
     const { onUpdateSettings } = useSettingsUpdateFlow({
         getSnapshot,
         persistSnapshot,
@@ -37,6 +44,7 @@ export function useSettingsFlow({
         setApiKeyPresent,
         clearErrorDetails,
         reportError,
+        dependencies: activeDependencies,
     });
 
     return {

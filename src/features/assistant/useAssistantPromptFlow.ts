@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState, type RefObject } from "react";
 import type { AppStateSnapshot } from "../../shared/types/appState";
-import { fetchQuickCaptureData, streamAgentResponse } from "./assistantService";
-
-type StatusTone = "idle" | "success" | "error";
+import type { StatusTone } from "../../shared/types/feedback";
+import type { AssistantFlowDependencies } from "./assistantFlowDependencies";
 
 interface SendPromptOverrides {
     promptOverride?: string;
@@ -10,16 +9,16 @@ interface SendPromptOverrides {
     agentId?: string;
 }
 
-interface RefCell<T> {
-    current: T;
-}
-
 interface UseAssistantPromptFlowParams {
-    snapshotRef: RefCell<AppStateSnapshot | null>;
+    snapshotRef: RefObject<AppStateSnapshot | null>;
     applySnapshotLocally: (snapshot: AppStateSnapshot) => void;
     setStatus: (tone: StatusTone, message: string) => void;
     clearErrorDetails: () => void;
     reportError: (error: unknown, prefix?: string) => void;
+    dependencies: Pick<
+        AssistantFlowDependencies,
+        "fetchQuickCaptureData" | "streamAgentResponse"
+    >;
 }
 
 export function useAssistantPromptFlow({
@@ -28,6 +27,7 @@ export function useAssistantPromptFlow({
     setStatus,
     clearErrorDetails,
     reportError,
+    dependencies,
 }: UseAssistantPromptFlowParams) {
     const [promptText, setPromptText] = useState("");
     const [sourceText, setSourceText] = useState("");
@@ -37,18 +37,9 @@ export function useAssistantPromptFlow({
     const promptRef = useRef("");
     const sourceRef = useRef("");
     const isSendingRef = useRef(false);
-
-    useEffect(() => {
-        promptRef.current = promptText;
-    }, [promptText]);
-
-    useEffect(() => {
-        sourceRef.current = sourceText;
-    }, [sourceText]);
-
-    useEffect(() => {
-        isSendingRef.current = isSending;
-    }, [isSending]);
+    promptRef.current = promptText;
+    sourceRef.current = sourceText;
+    isSendingRef.current = isSending;
 
     const applyCapturedText = useCallback((text: string) => {
         setSourceText(text);
@@ -64,7 +55,7 @@ export function useAssistantPromptFlow({
 
     const refreshQuickCapture = useCallback(async () => {
         const { latestCapture, snapshot: latestSnapshot } =
-            await fetchQuickCaptureData();
+            await dependencies.fetchQuickCaptureData();
 
         applySnapshotLocally(latestSnapshot);
 
@@ -74,7 +65,12 @@ export function useAssistantPromptFlow({
         }
 
         applyCapturedText(latestCapture.text);
-    }, [applyCapturedText, applySnapshotLocally, clearCapturedText]);
+    }, [
+        applyCapturedText,
+        applySnapshotLocally,
+        clearCapturedText,
+        dependencies,
+    ]);
 
     const sendCurrentPrompt = useCallback(
         async (overrides?: SendPromptOverrides) => {
@@ -111,7 +107,7 @@ export function useAssistantPromptFlow({
             setResponseText("");
 
             try {
-                await streamAgentResponse(
+                await dependencies.streamAgentResponse(
                     {
                         agentId,
                         sourceText: overrides?.sourceText ?? sourceRef.current,
@@ -131,7 +127,7 @@ export function useAssistantPromptFlow({
                 setIsSending(false);
             }
         },
-        [clearErrorDetails, reportError, setStatus, snapshotRef],
+        [clearErrorDetails, dependencies, reportError, setStatus, snapshotRef],
     );
 
     return {

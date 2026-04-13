@@ -1,11 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, type RefObject } from "react";
 import type { AppStateSnapshot } from "../../shared/types/appState";
-import { subscribeClipboardCaptured } from "./assistantService";
-import { resolveSelectedAgent } from "./agentUtils";
-
-interface RefCell<T> {
-    current: T;
-}
+import type { AssistantFlowDependencies } from "./assistantFlowDependencies";
 
 interface SendPromptOverrides {
     promptOverride?: string;
@@ -15,11 +10,15 @@ interface SendPromptOverrides {
 
 interface UseAssistantClipboardFlowParams {
     isQuickWindow: boolean;
-    snapshotRef: RefCell<AppStateSnapshot | null>;
+    snapshotRef: RefObject<AppStateSnapshot | null>;
     refreshQuickCapture: () => Promise<void>;
     applyCapturedText: (text: string) => void;
     sendCurrentPrompt: (overrides?: SendPromptOverrides) => Promise<void>;
     reportError: (error: unknown, prefix?: string) => void;
+    dependencies: Pick<
+        AssistantFlowDependencies,
+        "subscribeClipboardCaptured" | "resolveSelectedAgent"
+    >;
 }
 
 export function useAssistantClipboardFlow({
@@ -29,6 +28,7 @@ export function useAssistantClipboardFlow({
     applyCapturedText,
     sendCurrentPrompt,
     reportError,
+    dependencies,
 }: UseAssistantClipboardFlowParams) {
     useEffect(() => {
         let closed = false;
@@ -44,15 +44,15 @@ export function useAssistantClipboardFlow({
                     }
                 }
 
-                unlistenClipboard = await subscribeClipboardCaptured(
-                    (payload) => {
+                unlistenClipboard =
+                    await dependencies.subscribeClipboardCaptured((payload) => {
                         if (closed || !isQuickWindow || !payload.text.trim()) {
                             return;
                         }
 
                         const activeSnapshot = snapshotRef.current;
                         const activeAgent =
-                            resolveSelectedAgent(activeSnapshot);
+                            dependencies.resolveSelectedAgent(activeSnapshot);
 
                         if (!activeSnapshot || !activeAgent) {
                             return;
@@ -67,8 +67,7 @@ export function useAssistantClipboardFlow({
                                 sourceText: payload.text,
                             });
                         }
-                    },
-                );
+                    });
             } catch (error) {
                 if (!closed) {
                     reportError(error, "Clipboard listener failed");
@@ -91,5 +90,6 @@ export function useAssistantClipboardFlow({
         reportError,
         sendCurrentPrompt,
         snapshotRef,
+        dependencies,
     ]);
 }

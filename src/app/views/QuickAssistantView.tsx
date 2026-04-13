@@ -1,7 +1,13 @@
 import { QuickAssistantPage } from "../../features/assistant";
-import { useAppControllerContext } from "../AppControllerContext";
+import { useAppControllerStore } from "../appControllerStore";
 
 export function QuickAssistantView() {
+    const controller = useAppControllerStore((state) => state.controller);
+
+    if (!controller) {
+        return null;
+    }
+
     const {
         snapshot,
         promptText,
@@ -12,23 +18,11 @@ export function QuickAssistantView() {
         sendCurrentPrompt,
         onSelectAgent,
         onOpenFullApp,
-    } = useAppControllerContext();
+    } = controller;
 
     if (!snapshot) {
         return null;
     }
-
-    const handleSendPrompt = () => {
-        sendCurrentPrompt().catch(() => {
-            // sendCurrentPrompt already handles and surfaces errors in state.
-        });
-    };
-
-    const handleOpenFullApp = () => {
-        onOpenFullApp().catch(() => {
-            // onOpenFullApp already handles and surfaces errors in state.
-        });
-    };
 
     return (
         <QuickAssistantPage
@@ -42,8 +36,12 @@ export function QuickAssistantView() {
             onSelectAgent={onSelectAgent}
             onPromptChange={setPromptText}
             onRefreshCapture={refreshQuickCapture}
-            onSend={handleSendPrompt}
-            onOpenFullApp={handleOpenFullApp}
+            onSend={() => {
+                void sendCurrentPrompt();
+            }}
+            onOpenFullApp={() => {
+                void onOpenFullApp();
+            }}
         />
     );
 }

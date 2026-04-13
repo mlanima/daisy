@@ -1,55 +1,32 @@
-export interface ModelConfig {
-    model: string;
-    temperature: number;
-    maxTokens: number | null;
-}
+import type { z } from "zod";
+import {
+    agentSchema,
+    aiRunResponseSchema,
+    appSettingsSchema,
+    appStateSnapshotSchema,
+    clipboardCapturedEventSchema,
+    modelConfigSchema,
+    runAgentRequestSchema,
+    tokenUsageSchema,
+    windowSizeSchema,
+} from "../schemas/appStateSchema";
 
-export type WindowSize = "small" | "medium" | "big";
+export type ModelConfig = z.infer<typeof modelConfigSchema>;
 
-export interface Agent {
-    id: string;
-    name: string;
-    description: string;
-    systemPrompt: string;
-}
+export type WindowSize = z.infer<typeof windowSizeSchema>;
 
-export interface AppSettings {
-    autoSendPrompt: boolean;
-    darkMode: boolean;
-    apiBaseUrl: string;
-    windowSize: WindowSize;
-    recentAgentIds: string[];
-    model: ModelConfig;
-}
+export type Agent = z.infer<typeof agentSchema>;
 
-export interface AppStateSnapshot {
-    agents: Agent[];
-    selectedAgentId: string | null;
-    settings: AppSettings;
-    apiKey?: string;
-}
+export type AppSettings = z.infer<typeof appSettingsSchema>;
 
-export interface ClipboardCapturedEvent {
-    text: string;
-    capturedAtEpochMs: number;
-}
+export type AppStateSnapshot = z.infer<typeof appStateSnapshotSchema>;
 
-export interface TokenUsage {
-    promptTokens: number | null;
-    completionTokens: number | null;
-    totalTokens: number | null;
-}
+export type ClipboardCapturedEvent = z.infer<
+    typeof clipboardCapturedEventSchema
+>;
 
-export interface AiRunResponse {
-    outputText: string;
-    promptUsed: string;
-    model: string;
-    requestId: string | null;
-    usage: TokenUsage | null;
-}
+export type TokenUsage = z.infer<typeof tokenUsageSchema>;
 
-export interface RunAgentRequest {
-    agentId: string;
-    sourceText: string;
-    promptOverride: string | null;
-}
+export type AiRunResponse = z.infer<typeof aiRunResponseSchema>;
+
+export type RunAgentRequest = z.infer<typeof runAgentRequestSchema>;

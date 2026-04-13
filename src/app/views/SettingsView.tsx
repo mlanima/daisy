@@ -1,7 +1,13 @@
 import { SettingsPage } from "../../features/settings";
-import { useAppControllerContext } from "../AppControllerContext";
+import { useAppControllerStore } from "../appControllerStore";
 
 export function SettingsView() {
+    const controller = useAppControllerStore((state) => state.controller);
+
+    if (!controller) {
+        return null;
+    }
+
     const {
         snapshot,
         setView,
@@ -9,7 +15,7 @@ export function SettingsView() {
         onUpdateSettings,
         onSaveApiKey,
         onClearApiKey,
-    } = useAppControllerContext();
+    } = controller;
 
     if (!snapshot) {
         return null;

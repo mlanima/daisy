@@ -1,14 +1,23 @@
+import { useEffect } from "react";
 import { Button, StatusBanner } from "../shared/components";
-import {
-    AppControllerProvider,
-    useAppControllerContext,
-} from "./AppControllerContext";
+import { useAppControllerStore } from "./appControllerStore";
+import { useAppController } from "./useAppController";
 import { MainAssistantView } from "./views/MainAssistantView";
 import { QuickAssistantView } from "./views/QuickAssistantView";
 import { SettingsView } from "./views/SettingsView";
 import "./styles/app.css";
 
 function AppContent() {
+    const controller = useAppControllerStore((state) => state.controller);
+
+    if (!controller) {
+        return (
+            <main className="boot-screen">
+                <h1>Launching Assistant...</h1>
+            </main>
+        );
+    }
+
     const {
         view,
         setView,
@@ -17,7 +26,7 @@ function AppContent() {
         snapshot,
         isBootstrapping,
         status,
-    } = useAppControllerContext();
+    } = controller;
 
     if (isBootstrapping) {
         return (
@@ -77,11 +86,14 @@ function AppContent() {
 }
 
 function App() {
-    return (
-        <AppControllerProvider>
-            <AppContent />
-        </AppControllerProvider>
-    );
+    const controller = useAppController();
+    const setController = useAppControllerStore((state) => state.setController);
+
+    useEffect(() => {
+        setController(controller);
+    }, [controller, setController]);
+
+    return <AppContent />;
 }
 
 export default App;

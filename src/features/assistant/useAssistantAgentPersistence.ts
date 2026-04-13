@@ -1,13 +1,9 @@
-import { useCallback } from "react";
+import { useCallback, type RefObject } from "react";
 import type { Agent, AppStateSnapshot } from "../../shared/types/appState";
 import { updateRecentAgentIds } from "./agentUtils";
 
-interface RefCell<T> {
-    current: T;
-}
-
 interface UseAssistantAgentPersistenceParams {
-    snapshotRef: RefCell<AppStateSnapshot | null>;
+    snapshotRef: RefObject<AppStateSnapshot | null>;
     promptText: string;
     sourceText: string;
     setPromptText: (value: string) => void;

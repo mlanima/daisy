@@ -1,10 +1,13 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import type { AppStateSnapshot } from "../../shared/types/appState";
+import type { StatusTone } from "../../shared/types/feedback";
+import {
+    defaultAssistantFlowDependencies,
+    type AssistantFlowDependencies,
+} from "./assistantFlowDependencies";
 import { useAssistantAgentPersistence } from "./useAssistantAgentPersistence";
 import { useAssistantClipboardFlow } from "./useAssistantClipboardFlow";
 import { useAssistantPromptFlow } from "./useAssistantPromptFlow";
-
-type StatusTone = "idle" | "success" | "error";
 
 interface UseAssistantFlowParams {
     isQuickWindow: boolean;
@@ -14,10 +17,7 @@ interface UseAssistantFlowParams {
     setStatus: (tone: StatusTone, message: string) => void;
     clearErrorDetails: () => void;
     reportError: (error: unknown, prefix?: string) => void;
-}
-
-interface RefCell<T> {
-    current: T;
+    dependencies?: AssistantFlowDependencies;
 }
 
 export function useAssistantFlow({
@@ -28,14 +28,11 @@ export function useAssistantFlow({
     setStatus,
     clearErrorDetails,
     reportError,
+    dependencies,
 }: UseAssistantFlowParams) {
-    const snapshotRef = useRef<AppStateSnapshot | null>(
-        snapshot,
-    ) as RefCell<AppStateSnapshot | null>;
-
-    useEffect(() => {
-        snapshotRef.current = snapshot;
-    }, [snapshot]);
+    const snapshotRef = useRef<AppStateSnapshot | null>(snapshot);
+    snapshotRef.current = snapshot;
+    const activeDependencies = dependencies ?? defaultAssistantFlowDependencies;
 
     const {
         promptText,
@@ -52,6 +49,7 @@ export function useAssistantFlow({
         setStatus,
         clearErrorDetails,
         reportError,
+        dependencies: activeDependencies,
     });
 
     useAssistantClipboardFlow({
@@ -61,6 +59,7 @@ export function useAssistantFlow({
         applyCapturedText,
         sendCurrentPrompt,
         reportError,
+        dependencies: activeDependencies,
     });
 
     const { onSelectAgent, onUpdateAgents } = useAssistantAgentPersistence({

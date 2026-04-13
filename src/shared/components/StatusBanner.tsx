@@ -1,4 +1,4 @@
-type StatusTone = "idle" | "success" | "error";
+import type { StatusTone } from "../types/feedback";
 
 interface StatusBannerProps {
     tone: StatusTone;

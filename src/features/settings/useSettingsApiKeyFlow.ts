@@ -1,8 +1,7 @@
 import { useCallback } from "react";
 import type { AppStateSnapshot } from "../../shared/types/appState";
-import { clearSecretApiKey, saveSecretApiKey } from "./settingsService";
-
-type StatusTone = "idle" | "success" | "error";
+import type { StatusTone } from "../../shared/types/feedback";
+import type { SettingsFlowDependencies } from "./settingsFlowDependencies";
 
 interface UseSettingsApiKeyFlowParams {
     applySnapshotLocally: (snapshot: AppStateSnapshot) => void;
@@ -11,6 +10,7 @@ interface UseSettingsApiKeyFlowParams {
     setApiKeyPresent: (value: boolean) => void;
     clearErrorDetails: () => void;
     reportError: (error: unknown, prefix?: string) => void;
+    dependencies: SettingsFlowDependencies;
 }
 
 export function useSettingsApiKeyFlow({
@@ -20,11 +20,12 @@ export function useSettingsApiKeyFlow({
     setApiKeyPresent,
     clearErrorDetails,
     reportError,
+    dependencies,
 }: UseSettingsApiKeyFlowParams) {
     const onSaveApiKey = useCallback(
         async (apiKey: string) => {
             try {
-                await saveSecretApiKey(apiKey);
+                await dependencies.saveSecretApiKey(apiKey);
                 const updatedSnapshot = await loadSnapshot();
 
                 applySnapshotLocally(updatedSnapshot);
@@ -38,6 +39,7 @@ export function useSettingsApiKeyFlow({
         [
             applySnapshotLocally,
             clearErrorDetails,
+            dependencies,
             loadSnapshot,
             reportError,
             setApiKeyPresent,
@@ -47,7 +49,7 @@ export function useSettingsApiKeyFlow({
 
     const onClearApiKey = useCallback(async () => {
         try {
-            await clearSecretApiKey();
+            await dependencies.clearSecretApiKey();
             const updatedSnapshot = await loadSnapshot();
 
             applySnapshotLocally(updatedSnapshot);
@@ -60,6 +62,7 @@ export function useSettingsApiKeyFlow({
     }, [
         applySnapshotLocally,
         clearErrorDetails,
+        dependencies,
         loadSnapshot,
         reportError,
         setApiKeyPresent,

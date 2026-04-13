@@ -1,17 +1,15 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { AppStateSnapshot } from "../shared/types/appState";
 import { openMainAssistantWindow } from "../features/assistant/assistantService";
 import { resolveSelectedAgent } from "../features/assistant/agentUtils";
 import { useAssistantFlow } from "../features/assistant/useAssistantFlow";
 import { useSettingsFlow } from "../features/settings/useSettingsFlow";
 import {
-    bootstrapWorkspace,
-    extractErrorDetails,
-    extractErrorMessage,
+    createErrorPresenter,
+    createWorkspaceStateService,
     isQuickWindowMode,
-    loadWorkspaceSnapshot,
-    persistWorkspaceSnapshot,
 } from "./controllerUtils";
+import { useControllerFeedback } from "./useControllerFeedback";
 
 interface PersistSnapshotOptions {
     successMessage?: string;
@@ -19,12 +17,9 @@ interface PersistSnapshotOptions {
 
 type UiView = "assistant" | "settings";
 
-type StatusTone = "idle" | "success" | "error";
-
-interface UiStatus {
-    tone: StatusTone;
-    message: string;
-}
+const workspaceStateService = createWorkspaceStateService();
+const errorPresenter = createErrorPresenter();
+const loadWorkspaceSnapshot = () => workspaceStateService.loadSnapshot();
 
 function useUiShellState(
     snapshot: AppStateSnapshot | null,
@@ -73,24 +68,19 @@ export function useAppController() {
     const [snapshot, setSnapshot] = useState<AppStateSnapshot | null>(null);
     const [isBootstrapping, setIsBootstrapping] = useState(true);
     const [apiKeyPresent, setApiKeyPresent] = useState(false);
-    const [lastErrorDetails, setLastErrorDetails] = useState("");
-    const [status, setStatus] = useState<UiStatus>({
-        tone: "idle",
-        message: "",
-    });
 
     const snapshotRef = useRef<AppStateSnapshot | null>(null);
+    const {
+        status,
+        lastErrorDetails,
+        setStatusMessage,
+        clearErrorDetails,
+        setErrorState,
+    } = useControllerFeedback(errorPresenter);
 
-    const isQuickWindow = useMemo(() => isQuickWindowMode(), []);
-
-    const selectedAgent = useMemo(
-        () => resolveSelectedAgent(snapshot),
-        [snapshot],
-    );
-
-    useEffect(() => {
-        snapshotRef.current = snapshot;
-    }, [snapshot]);
+    const [isQuickWindow] = useState(isQuickWindowMode);
+    const selectedAgent = resolveSelectedAgent(snapshot);
+    snapshotRef.current = snapshot;
 
     useUiShellState(snapshot, isQuickWindow);
 
@@ -102,29 +92,6 @@ export function useAppController() {
         [],
     );
 
-    const setStatusMessage = useCallback(
-        (tone: StatusTone, message: string) => {
-            setStatus({ tone, message });
-        },
-        [],
-    );
-
-    const clearErrorDetails = useCallback(() => {
-        setLastErrorDetails("");
-    }, []);
-
-    const setErrorState = useCallback(
-        (error: unknown, prefix?: string) => {
-            const message = extractErrorMessage(error);
-            setStatusMessage(
-                "error",
-                prefix ? `${prefix}: ${message}` : message,
-            );
-            setLastErrorDetails(extractErrorDetails(error));
-        },
-        [setStatusMessage],
-    );
-
     const persistSnapshot = useCallback(
         async (
             nextSnapshot: AppStateSnapshot,
@@ -134,7 +101,7 @@ export function useAppController() {
 
             try {
                 const savedSnapshot =
-                    await persistWorkspaceSnapshot(nextSnapshot);
+                    await workspaceStateService.persistSnapshot(nextSnapshot);
                 applySnapshotLocally(savedSnapshot);
 
                 if (options?.successMessage) {
@@ -167,7 +134,7 @@ export function useAppController() {
         isQuickWindow,
         snapshot,
         applySnapshotLocally,
-        persistSnapshot: (nextSnapshot) => persistSnapshot(nextSnapshot),
+        persistSnapshot,
         setStatus: setStatusMessage,
         clearErrorDetails,
         reportError: setErrorState,
@@ -175,7 +142,7 @@ export function useAppController() {
 
     const { onUpdateSettings, onSaveApiKey, onClearApiKey } = useSettingsFlow({
         getSnapshot: () => snapshotRef.current,
-        persistSnapshot: (nextSnapshot) => persistSnapshot(nextSnapshot),
+        persistSnapshot,
         applySnapshotLocally,
         loadSnapshot: loadWorkspaceSnapshot,
         setStatus: setStatusMessage,
@@ -189,7 +156,7 @@ export function useAppController() {
 
         const bootstrap = async () => {
             try {
-                const initialState = await bootstrapWorkspace();
+                const initialState = await workspaceStateService.bootstrap();
 
                 if (!mounted) {
                     return;
@@ -216,24 +183,16 @@ export function useAppController() {
     }, [applySnapshotLocally, setErrorState]);
 
     useEffect(() => {
-        if (!snapshot || snapshot.agents.length === 0) {
+        if (!snapshot) {
             return;
         }
 
-        if (snapshot.selectedAgentId) {
-            const selectionStillExists = snapshot.agents.some(
-                (agent) => agent.id === snapshot.selectedAgentId,
-            );
+        const nextSnapshot =
+            workspaceStateService.repairSelectedAgent(snapshot);
 
-            if (selectionStillExists) {
-                return;
-            }
+        if (!nextSnapshot) {
+            return;
         }
-
-        const nextSnapshot = {
-            ...snapshot,
-            selectedAgentId: snapshot.agents[0].id,
-        };
 
         void persistSnapshot(nextSnapshot);
     }, [snapshot, persistSnapshot]);

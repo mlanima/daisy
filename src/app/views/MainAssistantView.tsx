@@ -1,7 +1,13 @@
 import { AssistantPage } from "../../features/assistant";
-import { useAppControllerContext } from "../AppControllerContext";
+import { useAppControllerStore } from "../appControllerStore";
 
 export function MainAssistantView() {
+    const controller = useAppControllerStore((state) => state.controller);
+
+    if (!controller) {
+        return null;
+    }
+
     const {
         snapshot,
         promptText,
@@ -13,17 +19,11 @@ export function MainAssistantView() {
         sendCurrentPrompt,
         onSelectAgent,
         onUpdateAgents,
-    } = useAppControllerContext();
+    } = controller;
 
     if (!snapshot) {
         return null;
     }
-
-    const handleSendPrompt = () => {
-        sendCurrentPrompt().catch(() => {
-            // sendCurrentPrompt already handles and surfaces errors in state.
-        });
-    };
 
     return (
         <AssistantPage
@@ -35,7 +35,9 @@ export function MainAssistantView() {
             errorDetails={lastErrorDetails}
             onSelectAgent={onSelectAgent}
             onPromptChange={setPromptText}
-            onSend={handleSendPrompt}
+            onSend={() => {
+                void sendCurrentPrompt();
+            }}
             onUpdateAgents={onUpdateAgents}
             onClearErrorDetails={clearErrorDetails}
         />
