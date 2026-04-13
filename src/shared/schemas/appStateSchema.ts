@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+/**
+ * Canonical runtime schemas for frontend-backend payloads.
+ * Keep these aligned with the Rust command/event contract.
+ */
 export const windowSizeSchema = z.enum(["small", "medium", "big"]);
 
 export const modelConfigSchema = z.object({

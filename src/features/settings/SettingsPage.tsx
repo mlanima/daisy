@@ -8,6 +8,7 @@ interface SaveKeyButtonProps {
     canSubmit: boolean;
 }
 
+/** Submit button that reflects pending state from the nearest parent form. */
 function SaveKeyButton({ canSubmit }: Readonly<SaveKeyButtonProps>) {
     const { pending } = useFormStatus();
 
@@ -22,6 +23,10 @@ function SaveKeyButton({ canSubmit }: Readonly<SaveKeyButtonProps>) {
     );
 }
 
+/**
+ * Renders user-facing settings for model behavior, display preferences,
+ * and secure API key management.
+ */
 export function SettingsPage({
     settings,
     apiKeyPresent,

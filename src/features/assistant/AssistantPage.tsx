@@ -13,6 +13,7 @@ interface AssistantAccordionItemProps {
     onDelete: (agentId: string) => void;
 }
 
+/** Collapsible editor row for a single assistant definition. */
 function AssistantAccordionItem({
     agent,
     isOpen,
@@ -78,6 +79,7 @@ function AssistantAccordionItem({
     );
 }
 
+/** Main assistant workspace layout for prompting and agent management. */
 export function AssistantPage({
     agents,
     selectedAgentId,

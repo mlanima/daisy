@@ -21,6 +21,9 @@ interface UseAssistantClipboardFlowParams {
     >;
 }
 
+/**
+ * Subscribes to clipboard capture events and optionally auto-sends prompts.
+ */
 export function useAssistantClipboardFlow({
     isQuickWindow,
     snapshotRef,
@@ -34,6 +37,7 @@ export function useAssistantClipboardFlow({
         let closed = false;
         let unlistenClipboard: (() => void) | null = null;
 
+        /** Initializes clipboard subscription and optional quick-window refresh. */
         const initClipboardListener = async () => {
             try {
                 if (isQuickWindow) {

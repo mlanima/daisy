@@ -1,5 +1,6 @@
 import type { Agent, AppStateSnapshot } from "../../shared/types/appState";
 
+/** Resolves the currently selected agent with fallback to the first agent. */
 export function resolveSelectedAgent(
     snapshot: AppStateSnapshot | null,
 ): Agent | null {
@@ -14,6 +15,7 @@ export function resolveSelectedAgent(
     );
 }
 
+/** Updates recent agent history by moving the selected id to the front. */
 export function updateRecentAgentIds(
     currentRecentAgentIds: string[],
     agentId: string,
@@ -24,6 +26,7 @@ export function updateRecentAgentIds(
     ].slice(0, 2);
 }
 
+/** Splits quick-window agent list into visible tabs and overflow items. */
 export function resolveQuickAgentRows(
     agents: Agent[],
     selectedAgentId: string | null,

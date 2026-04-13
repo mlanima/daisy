@@ -21,6 +21,9 @@ interface UseAssistantPromptFlowParams {
     >;
 }
 
+/**
+ * Handles prompt drafting and streaming response lifecycle for assistant runs.
+ */
 export function useAssistantPromptFlow({
     snapshotRef,
     applySnapshotLocally,
@@ -37,22 +40,26 @@ export function useAssistantPromptFlow({
     const promptRef = useRef("");
     const sourceRef = useRef("");
     const isSendingRef = useRef(false);
+    // Refs provide latest values inside stable async callbacks.
     promptRef.current = promptText;
     sourceRef.current = sourceText;
     isSendingRef.current = isSending;
 
+    /** Applies captured clipboard text to source and prompt inputs. */
     const applyCapturedText = useCallback((text: string) => {
         setSourceText(text);
         setPromptText(text);
         setResponseText("");
     }, []);
 
+    /** Clears prompt/source/response fields when no capture is available. */
     const clearCapturedText = useCallback(() => {
         setSourceText("");
         setPromptText("");
         setResponseText("");
     }, []);
 
+    /** Refreshes quick capture and updates snapshot + prompt content. */
     const refreshQuickCapture = useCallback(async () => {
         const { latestCapture, snapshot: latestSnapshot } =
             await dependencies.fetchQuickCaptureData();
@@ -72,6 +79,7 @@ export function useAssistantPromptFlow({
         dependencies,
     ]);
 
+    /** Sends current prompt and streams response chunks into UI state. */
     const sendCurrentPrompt = useCallback(
         async (overrides?: SendPromptOverrides) => {
             const activeSnapshot = snapshotRef.current;
@@ -97,6 +105,7 @@ export function useAssistantPromptFlow({
             }
 
             if (isSendingRef.current) {
+                // Prevent concurrent runs from racing response state.
                 return;
             }
 

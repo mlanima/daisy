@@ -20,6 +20,9 @@ interface UseAssistantFlowParams {
     dependencies?: AssistantFlowDependencies;
 }
 
+/**
+ * Composes prompt, clipboard, and agent-persistence subflows for assistants.
+ */
 export function useAssistantFlow({
     isQuickWindow,
     snapshot,

@@ -5,6 +5,7 @@ interface StatusBannerProps {
     message: string;
 }
 
+/** Displays transient app status feedback when a message is present. */
 export function StatusBanner({ tone, message }: Readonly<StatusBannerProps>) {
     if (!message) {
         return null;

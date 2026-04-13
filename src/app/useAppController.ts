@@ -19,8 +19,12 @@ type UiView = "assistant" | "settings";
 
 const workspaceStateService = createWorkspaceStateService();
 const errorPresenter = createErrorPresenter();
+/** Deferred loader used by settings flow to refresh snapshot after key updates. */
 const loadWorkspaceSnapshot = () => workspaceStateService.loadSnapshot();
 
+/**
+ * Applies shell-level DOM attributes that drive theme and layout styles.
+ */
 function useUiShellState(
     snapshot: AppStateSnapshot | null,
     isQuickWindow: boolean,
@@ -63,6 +67,10 @@ function useUiShellState(
     }, [isQuickWindow]);
 }
 
+/**
+ * Central app orchestration hook that coordinates bootstrap, persistence,
+ * feature flows, and status reporting for the desktop UI.
+ */
 export function useAppController() {
     const [view, setView] = useState<UiView>("assistant");
     const [snapshot, setSnapshot] = useState<AppStateSnapshot | null>(null);
@@ -80,10 +88,12 @@ export function useAppController() {
 
     const [isQuickWindow] = useState(isQuickWindowMode);
     const selectedAgent = resolveSelectedAgent(snapshot);
+    // Keep an always-fresh snapshot reference for async callbacks.
     snapshotRef.current = snapshot;
 
     useUiShellState(snapshot, isQuickWindow);
 
+    /** Applies snapshot to state and ref to keep async callbacks in sync. */
     const applySnapshotLocally = useCallback(
         (nextSnapshot: AppStateSnapshot) => {
             setSnapshot(nextSnapshot);
@@ -92,11 +102,13 @@ export function useAppController() {
         [],
     );
 
+    /** Persists snapshot changes and updates status/error feedback. */
     const persistSnapshot = useCallback(
         async (
             nextSnapshot: AppStateSnapshot,
             options?: PersistSnapshotOptions,
         ): Promise<void> => {
+            // Update UI immediately, then reconcile with persisted server state.
             applySnapshotLocally(nextSnapshot);
 
             try {
@@ -154,6 +166,7 @@ export function useAppController() {
     useEffect(() => {
         let mounted = true;
 
+        /** Bootstraps snapshot and API-key state for initial render. */
         const bootstrap = async () => {
             try {
                 const initialState = await workspaceStateService.bootstrap();
@@ -187,6 +200,7 @@ export function useAppController() {
             return;
         }
 
+        // Guards against stale selected ids after agent list edits.
         const nextSnapshot =
             workspaceStateService.repairSelectedAgent(snapshot);
 
@@ -197,6 +211,7 @@ export function useAppController() {
         void persistSnapshot(nextSnapshot);
     }, [snapshot, persistSnapshot]);
 
+    /** Opens the full-size assistant window from quick contexts. */
     const onOpenFullApp = useCallback(async () => {
         try {
             await openMainAssistantWindow();

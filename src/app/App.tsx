@@ -7,6 +7,9 @@ import { QuickAssistantView } from "./views/QuickAssistantView";
 import { SettingsView } from "./views/SettingsView";
 import "./styles/app.css";
 
+/**
+ * Renders the top-level shell once the app controller is available.
+ */
 function AppContent() {
     const controller = useAppControllerStore((state) => state.controller);
 
@@ -85,6 +88,9 @@ function AppContent() {
     );
 }
 
+/**
+ * Bootstraps the app controller and exposes it through the zustand store.
+ */
 function App() {
     const controller = useAppController();
     const setController = useAppControllerStore((state) => state.setController);

@@ -1,5 +1,6 @@
 import type { Agent } from "../../shared/types/appState";
 
+/** Creates a new editable assistant draft with a unique id. */
 export function createDraftAgent(): Agent {
     const id =
         typeof crypto !== "undefined" && "randomUUID" in crypto

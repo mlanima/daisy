@@ -9,10 +9,12 @@ interface UseSettingsUpdateFlowParams {
     persistSnapshot: (snapshot: AppStateSnapshot) => Promise<void>;
 }
 
+/** Applies settings edits into the active snapshot and persists them. */
 export function useSettingsUpdateFlow({
     getSnapshot,
     persistSnapshot,
 }: UseSettingsUpdateFlowParams) {
+    /** Applies settings to active snapshot and persists immediately. */
     const onUpdateSettings = useCallback(
         (settings: AppSettings) => {
             const activeSnapshot = getSnapshot();

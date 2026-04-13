@@ -8,6 +8,7 @@ interface QuickOverflowMenuProps {
     onSelectAgent: (agentId: string) => void;
 }
 
+/** Popup menu for selecting agents that do not fit in visible quick tabs. */
 export function QuickOverflowMenu({
     hiddenAgents,
     selectedAgentId,

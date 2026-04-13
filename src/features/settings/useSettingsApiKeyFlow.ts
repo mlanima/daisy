@@ -13,6 +13,9 @@ interface UseSettingsApiKeyFlowParams {
     dependencies: SettingsFlowDependencies;
 }
 
+/**
+ * Persists API key changes and refreshes in-memory snapshot/state indicators.
+ */
 export function useSettingsApiKeyFlow({
     applySnapshotLocally,
     loadSnapshot,
@@ -22,6 +25,7 @@ export function useSettingsApiKeyFlow({
     reportError,
     dependencies,
 }: UseSettingsApiKeyFlowParams) {
+    /** Saves API key then refreshes snapshot-derived settings state. */
     const onSaveApiKey = useCallback(
         async (apiKey: string) => {
             try {
@@ -47,6 +51,7 @@ export function useSettingsApiKeyFlow({
         ],
     );
 
+    /** Clears API key and updates snapshot/status state accordingly. */
     const onClearApiKey = useCallback(async () => {
         try {
             await dependencies.clearSecretApiKey();

@@ -9,6 +9,9 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     children?: ReactNode;
 }
 
+/**
+ * Shared button primitive with app-specific variants and state styles.
+ */
 export function Button({
     variant = "unstyled",
     active = false,

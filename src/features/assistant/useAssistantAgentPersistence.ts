@@ -10,6 +10,9 @@ interface UseAssistantAgentPersistenceParams {
     persistSnapshot: (snapshot: AppStateSnapshot) => Promise<void>;
 }
 
+/**
+ * Persists agent selection and list updates back into the workspace snapshot.
+ */
 export function useAssistantAgentPersistence({
     snapshotRef,
     promptText,
@@ -17,6 +20,7 @@ export function useAssistantAgentPersistence({
     setPromptText,
     persistSnapshot,
 }: UseAssistantAgentPersistenceParams) {
+    /** Selects an agent and persists recent-agent history updates. */
     const onSelectAgent = useCallback(
         (agentId: string) => {
             const activeSnapshot = snapshotRef.current;
@@ -50,6 +54,7 @@ export function useAssistantAgentPersistence({
         [persistSnapshot, promptText, setPromptText, snapshotRef, sourceText],
     );
 
+    /** Persists full agent list updates while sanitizing recent ids. */
     const onUpdateAgents = useCallback(
         (agents: Agent[], selectedAgentId: string | null) => {
             const activeSnapshot = snapshotRef.current;

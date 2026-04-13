@@ -10,6 +10,7 @@ interface SwitchFieldProps extends Omit<
     onChange: (checked: boolean) => void;
 }
 
+/** Labeled checkbox control normalized to a boolean `onChange` signature. */
 export function SwitchField({
     id,
     label,

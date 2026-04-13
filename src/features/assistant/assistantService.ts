@@ -21,6 +21,7 @@ export interface QuickCaptureData {
     snapshot: AppStateSnapshot;
 }
 
+/** Loads quick-window capture text and current snapshot in one request batch. */
 export async function fetchQuickCaptureData(): Promise<QuickCaptureData> {
     const [latestCapture, snapshot] = await Promise.all([
         getLatestClipboardCapture(),
@@ -30,12 +31,14 @@ export async function fetchQuickCaptureData(): Promise<QuickCaptureData> {
     return { latestCapture, snapshot };
 }
 
+/** Subscribes to clipboard capture events emitted by the backend layer. */
 export async function subscribeClipboardCaptured(
     handler: (payload: ClipboardCapturedEvent) => void,
 ): Promise<UnlistenFn> {
     return onClipboardCaptured(handler);
 }
 
+/** Streams assistant output chunks for a request until completion. */
 export async function streamAgentResponse(
     request: RunAgentRequest,
     onChunk: (chunk: string) => void,
@@ -49,10 +52,12 @@ export async function streamAgentResponse(
     }
 }
 
+/** Opens the full-size assistant window from quick mode. */
 export async function openMainAssistantWindow(): Promise<void> {
     await openMainWindow();
 }
 
+/** Requests the backend to resize the quick assistant window. */
 export async function resizeQuickAssistantWindow(
     width: number,
     height: number,
@@ -60,13 +65,20 @@ export async function resizeQuickAssistantWindow(
     return resizeQuickWindow(width, height);
 }
 
+/**
+ * Binds quick-window focus/blur behaviors and returns an unbind callback.
+ * @param onFocus Callback invoked when quick window regains focus.
+ * @returns Cleanup function that removes focus/blur listeners.
+ */
 export function bindQuickWindowLifecycle(onFocus: () => void): () => void {
     const webviewWindow = getCurrentWebviewWindow();
 
+    /** Forwards focus to caller so quick window can refresh capture content. */
     const handleFocus = () => {
         onFocus();
     };
 
+    /** Hides quick window whenever focus is lost. */
     const handleBlur = () => {
         void webviewWindow.hide();
     };

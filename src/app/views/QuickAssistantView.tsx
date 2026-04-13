@@ -1,6 +1,7 @@
 import { QuickAssistantPage } from "../../features/assistant";
 import { useAppControllerStore } from "../appControllerStore";
 
+/** Renders the compact quick-assistant surface used in popup mode. */
 export function QuickAssistantView() {
     const controller = useAppControllerStore((state) => state.controller);
 

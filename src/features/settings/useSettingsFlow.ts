@@ -19,6 +19,9 @@ interface UseSettingsFlowParams {
     dependencies?: SettingsFlowDependencies;
 }
 
+/**
+ * Composes settings update and API key flows behind one feature hook.
+ */
 export function useSettingsFlow({
     getSnapshot,
     persistSnapshot,

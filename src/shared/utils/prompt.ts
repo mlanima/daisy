@@ -1,3 +1,9 @@
+/**
+ * Injects source text into a template while supporting the `{text}` placeholder.
+ * @param template Prompt template that may include a `{text}` placeholder.
+ * @param text Source text captured from the user context.
+ * @returns Final prompt string sent to the model.
+ */
 export function buildPromptFromTemplate(
     template: string,
     text: string,

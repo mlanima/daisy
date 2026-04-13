@@ -25,6 +25,9 @@ interface UseQuickAssistantShellParams {
     onRefreshCapture: () => Promise<void>;
 }
 
+/**
+ * Coordinates quick-window layout sizing, overflow state, and focus refresh.
+ */
 export function useQuickAssistantShell({
     agents,
     selectedAgentId,
@@ -138,10 +141,12 @@ export function useQuickAssistantShell({
         });
     }, [onRefreshCapture]);
 
+    /** Toggles visibility of the hidden-agent overflow menu. */
     const toggleOverflow = useCallback(() => {
         setIsOverflowOpen((open) => !open);
     }, []);
 
+    /** Selects an overflow agent and closes the overflow menu. */
     const selectHiddenAgent = useCallback(
         (agentId: string) => {
             onSelectAgent(agentId);

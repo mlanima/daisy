@@ -10,6 +10,7 @@ interface QuickAgentTabsProps {
     onToggleOverflow: () => void;
 }
 
+/** Renders visible quick-agent tabs and an overflow toggle when needed. */
 export function QuickAgentTabs({
     visibleAgents,
     hiddenAgents,

@@ -9,6 +9,9 @@ interface UseAssistantAgentManagementParams {
     onUpdateAgents: (agents: Agent[], selectedAgentId: string | null) => void;
 }
 
+/**
+ * Handles agent CRUD and accordion/panel UI state for the assistant page.
+ */
 export function useAssistantAgentManagement({
     agents,
     selectedAgentId,
@@ -28,6 +31,7 @@ export function useAssistantAgentManagement({
 
     const hasResponse = responseText.trim().length > 0;
 
+    /** Updates a single agent by id using the provided transformation. */
     const updateAgent = useCallback(
         (agentId: string, updater: (agent: Agent) => Agent) => {
             const nextAgents = agents.map((agent) =>
@@ -39,6 +43,7 @@ export function useAssistantAgentManagement({
         [agents, onUpdateAgents, selectedAgentId],
     );
 
+    /** Removes an agent and ensures selected id still points to a valid row. */
     const removeAgent = useCallback(
         (agentId: string) => {
             if (agents.length <= 1) {
@@ -56,12 +61,14 @@ export function useAssistantAgentManagement({
         [agents, onUpdateAgents, selectedAgentId],
     );
 
+    /** Creates and selects a new assistant draft row. */
     const addAgent = useCallback(() => {
         const newAgent = createDraftAgent();
         onUpdateAgents([...agents, newAgent], selectedAgentId ?? newAgent.id);
         setOpenAssistantId(newAgent.id);
     }, [agents, onUpdateAgents, selectedAgentId]);
 
+    /** Opens or closes the assistants panel and resets accordion when closed. */
     const toggleAssistantsPanel = useCallback((nextOpen: boolean) => {
         setIsAssistantsOpen(nextOpen);
 
@@ -70,6 +77,7 @@ export function useAssistantAgentManagement({
         }
     }, []);
 
+    /** Toggles accordion expansion for a specific assistant entry. */
     const toggleAgentAccordion = useCallback((agentId: string) => {
         setOpenAssistantId((currentOpenId) =>
             currentOpenId === agentId ? null : agentId,

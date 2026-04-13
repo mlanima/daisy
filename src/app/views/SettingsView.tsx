@@ -1,6 +1,7 @@
 import { SettingsPage } from "../../features/settings";
 import { useAppControllerStore } from "../appControllerStore";
 
+/** Renders the settings screen bound to controller-backed actions. */
 export function SettingsView() {
     const controller = useAppControllerStore((state) => state.controller);
 

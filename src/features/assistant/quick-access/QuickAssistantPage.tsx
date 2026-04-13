@@ -4,6 +4,7 @@ import { useQuickAssistantShell } from "./useQuickAssistantShell";
 import { QuickAgentTabs } from "./components/QuickAgentTabs";
 import { QuickOverflowMenu } from "./components/QuickOverflowMenu";
 
+/** Compact quick-window assistant UI with agent tabs and single prompt area. */
 export function QuickAssistantPage({
     agents,
     selectedAgentId,

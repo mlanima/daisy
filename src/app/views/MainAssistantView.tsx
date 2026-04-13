@@ -1,6 +1,7 @@
 import { AssistantPage } from "../../features/assistant";
 import { useAppControllerStore } from "../appControllerStore";
 
+/** Renders the full assistant workspace in the main window. */
 export function MainAssistantView() {
     const controller = useAppControllerStore((state) => state.controller);
 
