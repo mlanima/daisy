@@ -1,4 +1,4 @@
-import type { Agent } from "./types";
+import type { Agent } from "../../shared/types/appState";
 
 export function createDraftAgent(): Agent {
     const id =

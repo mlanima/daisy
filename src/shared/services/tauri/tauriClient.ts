@@ -5,7 +5,7 @@ import type {
     AppStateSnapshot,
     ClipboardCapturedEvent,
     RunAgentRequest,
-} from "../domain/types";
+} from "../../types/appState";
 
 const CLIPBOARD_CAPTURED_EVENT = "clipboard-captured";
 

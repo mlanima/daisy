@@ -1,5 +1,3 @@
-export type UiView = "assistant" | "settings";
-
 export interface ModelConfig {
     model: string;
     temperature: number;
