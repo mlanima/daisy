@@ -1,10 +1,14 @@
-import { AssistantPage, QuickAssistantPage } from "../features/assistant";
-import { SettingsPage } from "../features/settings";
 import { Button, StatusBanner } from "../shared/components";
-import { useAppController } from "./useAppController.ts";
+import {
+    AppControllerProvider,
+    useAppControllerContext,
+} from "./AppControllerContext";
+import { MainAssistantView } from "./views/MainAssistantView";
+import { QuickAssistantView } from "./views/QuickAssistantView";
+import { SettingsView } from "./views/SettingsView";
 import "./styles/app.css";
 
-function App() {
+function AppContent() {
     const {
         view,
         setView,
@@ -13,34 +17,7 @@ function App() {
         snapshot,
         isBootstrapping,
         status,
-        promptText,
-        responseText,
-        isSending,
-        apiKeyPresent,
-        lastErrorDetails,
-        setPromptText,
-        clearErrorDetails,
-        refreshQuickCapture,
-        sendCurrentPrompt,
-        onSelectAgent,
-        onUpdateAgents,
-        onUpdateSettings,
-        onSaveApiKey,
-        onClearApiKey,
-        onOpenFullApp,
-    } = useAppController();
-
-    const handleSendPrompt = () => {
-        sendCurrentPrompt().catch(() => {
-            // sendCurrentPrompt already handles and surfaces errors in state.
-        });
-    };
-
-    const handleOpenFullApp = () => {
-        onOpenFullApp().catch(() => {
-            // onOpenFullApp already handles and surfaces errors in state.
-        });
-    };
+    } = useAppControllerContext();
 
     if (isBootstrapping) {
         return (
@@ -60,22 +37,7 @@ function App() {
     }
 
     if (isQuickWindow) {
-        return (
-            <QuickAssistantPage
-                agents={snapshot.agents}
-                selectedAgentId={snapshot.selectedAgentId}
-                recentAgentIds={snapshot.settings.recentAgentIds}
-                promptText={promptText}
-                responseText={responseText}
-                isSending={isSending}
-                windowSize={snapshot.settings.windowSize}
-                onSelectAgent={onSelectAgent}
-                onPromptChange={setPromptText}
-                onRefreshCapture={refreshQuickCapture}
-                onSend={handleSendPrompt}
-                onOpenFullApp={handleOpenFullApp}
-            />
-        );
+        return <QuickAssistantView />;
     }
 
     return (
@@ -109,31 +71,16 @@ function App() {
 
             <StatusBanner tone={status.tone} message={status.message} />
 
-            {view === "assistant" ? (
-                <AssistantPage
-                    agents={snapshot.agents}
-                    selectedAgentId={snapshot.selectedAgentId}
-                    promptText={promptText}
-                    responseText={responseText}
-                    isSending={isSending}
-                    errorDetails={lastErrorDetails}
-                    onSelectAgent={onSelectAgent}
-                    onPromptChange={setPromptText}
-                    onSend={handleSendPrompt}
-                    onUpdateAgents={onUpdateAgents}
-                    onClearErrorDetails={clearErrorDetails}
-                />
-            ) : (
-                <SettingsPage
-                    settings={snapshot.settings}
-                    apiKeyPresent={apiKeyPresent}
-                    onBack={() => setView("assistant")}
-                    onUpdateSettings={onUpdateSettings}
-                    onSaveApiKey={onSaveApiKey}
-                    onClearApiKey={onClearApiKey}
-                />
-            )}
+            {view === "assistant" ? <MainAssistantView /> : <SettingsView />}
         </main>
+    );
+}
+
+function App() {
+    return (
+        <AppControllerProvider>
+            <AppContent />
+        </AppControllerProvider>
     );
 }
 
