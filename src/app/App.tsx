@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Settings as SettingsIcon } from "lucide-react";
 import { Button, StatusBanner } from "../shared/components";
 import { useAppControllerStore } from "./appControllerStore";
 import { useAppController } from "./useAppController";
@@ -61,47 +62,52 @@ function AppContent() {
     }
 
     return (
-        <main className="mx-auto flex w-full max-w-7xl flex-col gap-4">
-            <header className="relative overflow-hidden rounded-lg border bg-card p-4 shadow-sm">
-                <div className="relative z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div className="space-y-1.5">
-                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-                            AIDS Assistant
-                        </h1>
-                        <p className="text-sm text-muted-foreground">
-                            Capture text with Ctrl+C, Ctrl+C and run focused AI
-                            workflows quickly.
-                        </p>
-                    </div>
+        <div className="relative h-full w-full overflow-x-hidden">
+            <div className="pointer-events-none absolute inset-x-0 -top-18 z-0 mx-auto h-64 max-w-5xl rounded-full bg-primary/20 blur-3xl" />
+            <div className="pointer-events-none absolute -right-8 top-10 z-0 h-44 w-44 rounded-full bg-emerald-400/20 blur-2xl" />
 
-                    <nav
-                        className="inline-flex rounded-lg bg-muted p-1"
-                        aria-label="Views"
-                    >
-                        <Button
-                            variant="tab"
-                            active={view === "assistant"}
-                            className="px-3.5"
-                            onClick={() => setView("assistant")}
-                        >
-                            Assistant
-                        </Button>
-                        <Button
-                            variant="tab"
-                            active={view === "settings"}
-                            className="px-3.5"
-                            onClick={() => setView("settings")}
-                        >
-                            Settings
-                        </Button>
-                    </nav>
-                </div>
-            </header>
+            <main className="custom-scrollbar relative z-10 flex h-full w-full flex-col gap-5 overflow-y-auto overflow-x-hidden p-3">
+                {view === "assistant" ? (
+                    <header className="rounded-3xl border border-border/75 bg-card/80 p-5 shadow-[0_24px_64px_-36px_hsl(var(--foreground))] backdrop-blur-xl">
+                        <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+                            <div className="space-y-3">
+                                <span className="inline-flex items-center rounded-full border border-primary/35 bg-primary/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.16em] text-primary">
+                                    Desktop AI Workflow
+                                </span>
+                                <div className="space-y-1.5">
+                                    <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+                                        AIDS Assistant
+                                    </h1>
+                                    <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                                        Capture text with Ctrl+C, Ctrl+C and
+                                        route it through focused agent workflows
+                                        with a clean, low-friction desktop
+                                        experience.
+                                    </p>
+                                </div>
+                            </div>
 
-            <StatusBanner tone={status.tone} message={status.message} />
+                            <Button
+                                variant="ghost"
+                                className="h-14 w-14 p-0 text-muted-foreground border-transparent! bg-transparent! hover:border-transparent! hover:bg-transparent! hover:text-foreground hover:scale-110"
+                                aria-label="Open settings"
+                                onClick={() => setView("settings")}
+                            >
+                                <SettingsIcon className="h-8 w-8" />
+                            </Button>
+                        </div>
+                    </header>
+                ) : null}
 
-            {view === "assistant" ? <MainAssistantView /> : <SettingsView />}
-        </main>
+                <StatusBanner tone={status.tone} message={status.message} />
+
+                {view === "assistant" ? (
+                    <MainAssistantView />
+                ) : (
+                    <SettingsView />
+                )}
+            </main>
+        </div>
     );
 }
 

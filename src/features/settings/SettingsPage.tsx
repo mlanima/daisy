@@ -1,11 +1,12 @@
 import { useFormStatus } from "react-dom";
+import { ArrowLeft } from "lucide-react";
 import { Button, Card, SwitchField } from "../../shared/components";
 import { WINDOW_SIZE_LABELS } from "./windowSizeLabels";
 import { useSettingsApiKey } from "./useSettingsApiKey";
 import type { SettingsPageProps } from "./types";
 
 const controlClass =
-    "w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
+    "w-full rounded-xl border border-input/85 bg-background/70 px-3 py-2.5 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55 disabled:cursor-not-allowed disabled:opacity-50";
 
 interface SaveKeyButtonProps {
     canSubmit: boolean;
@@ -58,20 +59,25 @@ export function SettingsPage({
     });
 
     return (
-        <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-xl font-semibold tracking-tight">
+        <div className="grid gap-5">
+            <div className="flex items-start gap-3 rounded-2xl border border-border/70 bg-card/75 p-4 md:items-center">
+                <Button
+                    variant="ghost"
+                    className="h-14 w-14 p-0 text-muted-foreground !border-transparent !bg-transparent hover:!border-transparent hover:!bg-transparent hover:text-foreground hover:scale-110"
+                    aria-label="Back to assistant"
+                    onClick={onBack}
+                >
+                    <ArrowLeft className="h-8 w-8" />
+                </Button>
+
+                <div className="space-y-1">
+                    <h2 className="text-2xl font-semibold tracking-tight">
                         Settings
                     </h2>
                     <p className="text-sm text-muted-foreground">
                         Configure model behavior, appearance, and credentials.
                     </p>
                 </div>
-
-                <Button variant="ghost" onClick={onBack}>
-                    Back to Assistant
-                </Button>
             </div>
 
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
@@ -85,7 +91,7 @@ export function SettingsPage({
                         </p>
                     </div>
 
-                    <div className="flex items-center justify-between gap-2 rounded-lg border bg-background p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/70 bg-background/60 p-3">
                         <span className="font-mono text-sm text-muted-foreground">
                             {keyPreview === "<loading>"
                                 ? "Loading..."
@@ -110,7 +116,7 @@ export function SettingsPage({
                     </div>
 
                     <details
-                        className="group rounded-lg border bg-background"
+                        className="group rounded-xl border border-border/70 bg-background/55"
                         open={showAdvanced}
                     >
                         <summary
@@ -128,7 +134,7 @@ export function SettingsPage({
                             </span>
                         </summary>
 
-                        <div className="grid gap-3 border-t p-3">
+                        <div className="grid gap-3 border-t border-border/70 p-3">
                             <label
                                 htmlFor="global-model"
                                 className="text-xs font-medium text-muted-foreground"
@@ -291,7 +297,7 @@ export function SettingsPage({
                         onClick={closeKeyModal}
                     />
 
-                    <div className="relative z-10 flex w-full max-w-md flex-col gap-4 rounded-2xl border bg-card p-6 shadow-2xl animate-[shell-enter_180ms_cubic-bezier(0.2,0.8,0.2,1)]">
+                    <div className="relative z-10 flex w-full max-w-md flex-col gap-4 rounded-3xl border border-border/70 bg-card/95 p-6 shadow-2xl backdrop-blur animate-[shell-enter_180ms_cubic-bezier(0.2,0.8,0.2,1)]">
                         <h2 className="text-2xl font-semibold tracking-tight">
                             Set Secret Key
                         </h2>

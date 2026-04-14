@@ -53,10 +53,10 @@ export function useQuickAssistantShell({
     );
 
     useEffect(() => {
-        if (hiddenAgents.length === 0 && isOverflowOpen) {
+        if (agents.length === 0 && isOverflowOpen) {
             setIsOverflowOpen(false);
         }
-    }, [hiddenAgents.length, isOverflowOpen]);
+    }, [agents.length, isOverflowOpen]);
 
     useLayoutEffect(() => {
         const promptElement = promptRef.current;
@@ -133,7 +133,7 @@ export function useQuickAssistantShell({
         return () => {
             cancelAnimationFrame(frame);
         };
-    }, [promptText, responseText, isSending, windowSize, isOverflowOpen]);
+    }, [promptText, responseText, isSending, windowSize]);
 
     useEffect(() => {
         return bindQuickWindowLifecycle(() => {

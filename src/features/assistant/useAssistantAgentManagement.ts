@@ -61,12 +61,28 @@ export function useAssistantAgentManagement({
         [agents, onUpdateAgents, selectedAgentId],
     );
 
-    /** Creates and selects a new assistant draft row. */
-    const addAgent = useCallback(() => {
-        const newAgent = createDraftAgent();
-        onUpdateAgents([...agents, newAgent], selectedAgentId ?? newAgent.id);
-        setOpenAssistantId(newAgent.id);
-    }, [agents, onUpdateAgents, selectedAgentId]);
+    /** Creates and selects a new assistant row from dialog-entered values. */
+    const addAgent = useCallback(
+        (name: string, systemPrompt: string) => {
+            const nextName = name.trim();
+            const nextPrompt = systemPrompt.trim();
+
+            if (!nextName && !nextPrompt) {
+                return false;
+            }
+
+            const newAgent = createDraftAgent({
+                name: nextName,
+                systemPrompt: nextPrompt,
+            });
+
+            onUpdateAgents([newAgent, ...agents], newAgent.id);
+            setOpenAssistantId(newAgent.id);
+
+            return true;
+        },
+        [agents, onUpdateAgents],
+    );
 
     /** Opens or closes the assistants panel and resets accordion when closed. */
     const toggleAssistantsPanel = useCallback((nextOpen: boolean) => {

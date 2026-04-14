@@ -1,7 +1,12 @@
 import type { Agent } from "../../shared/types/appState";
 
+interface CreateDraftAgentParams {
+    name?: string;
+    systemPrompt?: string;
+}
+
 /** Creates a new editable assistant draft with a unique id. */
-export function createDraftAgent(): Agent {
+export function createDraftAgent(params?: CreateDraftAgentParams): Agent {
     const id =
         typeof crypto !== "undefined" && "randomUUID" in crypto
             ? crypto.randomUUID()
@@ -9,9 +14,8 @@ export function createDraftAgent(): Agent {
 
     return {
         id,
-        name: "New Agent",
-        description: "Custom assistant workflow",
-        systemPrompt:
-            "You are a helpful assistant. Respond clearly and directly.",
+        name: params?.name ?? "",
+        description: "",
+        systemPrompt: params?.systemPrompt ?? "",
     };
 }

@@ -1,66 +1,38 @@
 import type { Agent } from "../../../../shared/types/appState";
+import { ChevronDown } from "lucide-react";
 import { Button } from "../../../../shared/components";
 
 interface QuickAgentTabsProps {
-    visibleAgents: Agent[];
-    hiddenAgents: Agent[];
-    selectedAgentId: string | null;
+    selectedAgent: Agent | null;
     isOverflowOpen: boolean;
-    onSelectAgent: (agentId: string) => void;
     onToggleOverflow: () => void;
 }
 
-/** Renders visible quick-agent tabs and an overflow toggle when needed. */
+/** Renders quick-agent dropdown trigger button. */
 export function QuickAgentTabs({
-    visibleAgents,
-    hiddenAgents,
-    selectedAgentId,
+    selectedAgent,
     isOverflowOpen,
-    onSelectAgent,
     onToggleOverflow,
 }: Readonly<QuickAgentTabsProps>) {
+    const label = selectedAgent?.name?.trim() || "Select agent";
+
     return (
-        <div className="flex min-w-0 flex-1 gap-1 overflow-hidden">
-            {visibleAgents.map((agent, index) => {
-                const isLastVisible = index === visibleAgents.length - 1;
-                const isActive = selectedAgentId === agent.id;
-
-                return (
-                    <Button
-                        key={agent.id}
-                        variant="unstyled"
-                        className={[
-                            "shrink-0 rounded-md border border-slate-300 bg-white px-2 py-0.5 text-left text-inherit transition hover:border-slate-400 dark:border-slate-700 dark:bg-slate-900",
-                            isLastVisible
-                                ? "min-w-0 flex-1 truncate"
-                                : "whitespace-nowrap",
-                            isActive
-                                ? "border-slate-400 bg-slate-100 text-slate-900 dark:border-slate-500 dark:bg-slate-800 dark:text-slate-100"
-                                : "text-slate-700 dark:text-slate-200",
-                        ].join(" ")}
-                        onClick={() => onSelectAgent(agent.id)}
-                        title={agent.name}
-                    >
-                        {agent.name}
-                    </Button>
-                );
-            })}
-
-            {hiddenAgents.length > 0 ? (
-                <Button
-                    variant="unstyled"
-                    className={[
-                        "rounded-md border border-slate-300 bg-white px-2 py-0.5 text-inherit transition hover:border-slate-400 dark:border-slate-700 dark:bg-slate-900",
-                        isOverflowOpen
-                            ? "border-slate-400 bg-slate-100 text-slate-900 dark:border-slate-500 dark:bg-slate-800 dark:text-slate-100"
-                            : "text-slate-700 dark:text-slate-200",
-                    ].join(" ")}
-                    onClick={onToggleOverflow}
-                    aria-label="Show more agents"
-                >
-                    ...
-                </Button>
-            ) : null}
-        </div>
+        <Button
+            variant="unstyled"
+            className={[
+                "inline-flex max-w-full items-center gap-2 rounded-lg border px-3 py-1.5 text-left transition",
+                isOverflowOpen
+                    ? "border-primary/60 bg-primary/15 text-foreground shadow-sm"
+                    : "border-border/80 bg-background/75 text-foreground hover:border-primary/45 hover:bg-primary/10",
+            ].join(" ")}
+            onClick={onToggleOverflow}
+            aria-label="Choose agent"
+            title={label}
+        >
+            <span className="truncate font-medium">{label}</span>
+            <ChevronDown
+                className={`h-4 w-4 shrink-0 transition ${isOverflowOpen ? "rotate-180" : "rotate-0"}`}
+            />
+        </Button>
     );
 }

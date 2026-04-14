@@ -7,7 +7,7 @@ export interface CardProps extends HTMLAttributes<HTMLElement> {
 /** Generic card container used across assistant and settings screens. */
 export function Card({ className, children, ...props }: Readonly<CardProps>) {
     const classes = [
-        "flex min-h-0 flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white/75 p-4 shadow-sm backdrop-blur-sm md:p-5 dark:border-slate-700/70 dark:bg-slate-900/70",
+        "flex min-h-0 flex-col gap-4 rounded-2xl border border-border/75 bg-card/85 p-4 shadow-[0_18px_40px_-28px_hsl(var(--foreground))] backdrop-blur md:p-5",
         className ?? "",
     ]
         .filter(Boolean)
