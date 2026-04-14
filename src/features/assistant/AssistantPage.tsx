@@ -3,6 +3,9 @@ import { Button, Card } from "../../shared/components";
 import type { AssistantPageProps } from "./types";
 import { useAssistantAgentManagement } from "./useAssistantAgentManagement";
 
+const controlClass =
+    "w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
+
 interface AssistantAccordionItemProps {
     agent: Agent;
     isOpen: boolean;
@@ -27,42 +30,58 @@ function AssistantAccordionItem({
 
     return (
         <li>
-            <details className="agent-accordion" open={isOpen}>
+            <details
+                className="group rounded-lg border bg-card open:border-primary"
+                open={isOpen}
+            >
                 <summary
-                    className="agent-accordion-summary"
+                    className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 [::-webkit-details-marker]:hidden"
                     onClick={(event) => {
                         event.preventDefault();
                         onToggle(agent.id);
                     }}
                 >
-                    <span className="agent-name">{displayName}</span>
+                    <span className="text-sm font-semibold text-card-foreground">
+                        {displayName}
+                    </span>
+                    <span className="text-xs text-muted-foreground transition group-open:rotate-90">
+                        ▸
+                    </span>
                 </summary>
 
-                <div className="agent-accordion-content">
-                    <div className="agent-manage-grid">
-                        <label htmlFor={`assistant-name-${agent.id}`}>
+                <div className="grid max-h-0 -translate-y-0.5 gap-3 overflow-hidden px-3 opacity-0 transition-all duration-200 group-open:max-h-175 group-open:translate-y-0 group-open:pb-3 group-open:opacity-100">
+                    <div className="flex flex-col gap-2">
+                        <label
+                            htmlFor={`assistant-name-${agent.id}`}
+                            className="text-xs font-medium text-muted-foreground"
+                        >
                             Name
                         </label>
                         <input
                             id={`assistant-name-${agent.id}`}
+                            className={controlClass}
                             value={agent.name}
                             onChange={(event) =>
                                 onUpdateName(agent.id, event.target.value)
                             }
                         />
 
-                        <label htmlFor={`assistant-prompt-${agent.id}`}>
-                            System prompt
+                        <label
+                            htmlFor={`assistant-prompt-${agent.id}`}
+                            className="text-xs font-medium text-muted-foreground"
+                        >
+                            System Prompt
                         </label>
                         <textarea
                             id={`assistant-prompt-${agent.id}`}
+                            className={`${controlClass} min-h-30 resize-y`}
                             value={agent.systemPrompt}
                             onChange={(event) =>
                                 onUpdatePrompt(agent.id, event.target.value)
                             }
                         />
 
-                        <div className="agent-manage-actions">
+                        <div className="flex justify-end pt-1">
                             <Button
                                 variant="ghost"
                                 danger
@@ -79,162 +98,68 @@ function AssistantAccordionItem({
     );
 }
 
-/** Main assistant workspace layout for prompting and agent management. */
+/**
+ * Renders the main assistant management and interaction view.
+ */
 export function AssistantPage({
-    agents,
-    selectedAgentId,
-    promptText,
-    responseText,
-    isSending,
-    errorDetails,
-    onSelectAgent,
-    onPromptChange,
-    onSend,
-    onUpdateAgents,
-    onClearErrorDetails,
+	agents,
+	selectedAgent,
+	responseText,
+	onUpdateAgents,
 }: Readonly<AssistantPageProps>) {
-    const {
-        activeAgent,
-        hasResponse,
-        isAssistantsOpen,
-        openAssistantId,
-        updateAgent,
-        removeAgent,
-        addAgent,
-        toggleAssistantsPanel,
-        toggleAgentAccordion,
-    } = useAssistantAgentManagement({
-        agents,
-        selectedAgentId,
-        responseText,
-        onUpdateAgents,
-    });
+	const {
+		openAssistantId,
+		canDelete,
+		canCreate,
+		handleToggleAgent,
+		handleUpdateName,
+		handleUpdatePrompt,
+		handleDeleteAgent,
+		handleCreateAgent,
+	} = useAssistantAgentManagement({
+		agents,
+		onUpdateAgents,
+		selectedAgentId: selectedAgent?.id ?? null,
+		responseText: responseText,
+	});
 
-    return (
-        <section className="workspace assistant-workspace">
-            <div className="main-panel">
-                <header className="top-bar">
-                    <div className="top-bar-group">
-                        <label htmlFor="agent-select">Agent</label>
-                        <select
-                            id="agent-select"
-                            value={selectedAgentId ?? ""}
-                            onChange={(event) =>
-                                onSelectAgent(event.target.value)
-                            }
-                        >
-                            {agents.map((agent) => (
-                                <option key={agent.id} value={agent.id}>
-                                    {agent.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <Button
-                        variant="primary"
-                        disabled={
-                            isSending || !activeAgent || !promptText.trim()
-                        }
-                        onClick={onSend}
-                    >
-                        {isSending ? "Sending..." : "Send"}
-                    </Button>
-                </header>
-
-                <div
-                    className={`panel-grid ${hasResponse ? "has-response" : ""}`}
-                >
-                    <Card className="prompt-card">
-                        <header>
-                            <h3>Prompt</h3>
-                        </header>
-                        <textarea
-                            value={promptText}
-                            placeholder="Selected text will appear here after double Ctrl+C."
-                            onChange={(event) =>
-                                onPromptChange(event.target.value)
-                            }
-                        />
-                    </Card>
-
-                    {hasResponse ? (
-                        <Card className="response-card response-popup">
-                            <header>
-                                <h3>Response</h3>
-                                <p>
-                                    Generated output from your selected AI
-                                    model.
-                                </p>
-                            </header>
-                            <pre>{responseText}</pre>
-
-                            {errorDetails ? (
-                                <div className="error-log-block">
-                                    <div className="inline-row">
-                                        <h4>Last error details</h4>
-                                        <Button
-                                            variant="ghost"
-                                            onClick={onClearErrorDetails}
-                                        >
-                                            Clear
-                                        </Button>
-                                    </div>
-                                    <pre>{errorDetails}</pre>
-                                </div>
-                            ) : null}
-                        </Card>
-                    ) : null}
-                </div>
-            </div>
-
-            <aside className="left-panel assistants-panel">
-                <details
-                    className="assistants-fold"
-                    open={isAssistantsOpen}
-                    onToggle={(event) =>
-                        toggleAssistantsPanel(event.currentTarget.open)
-                    }
-                >
-                    <summary className="assistants-summary">
-                        <h2>Assistants</h2>
-                    </summary>
-
-                    <div className="assistants-fold-content">
-                        <div className="panel-header">
-                            <p>Manage your assistants</p>
-                            <Button variant="primary" onClick={addAgent}>
-                                Add Assistant
-                            </Button>
-                        </div>
-
-                        <ul className="agent-list accordion-list">
-                            {agents.map((agent) => (
-                                <AssistantAccordionItem
-                                    key={agent.id}
-                                    agent={agent}
-                                    isOpen={openAssistantId === agent.id}
-                                    canDelete={agents.length > 1}
-                                    onToggle={toggleAgentAccordion}
-                                    onUpdateName={(agentId, name) =>
-                                        updateAgent(agentId, (current) => ({
-                                            ...current,
-                                            name,
-                                        }))
-                                    }
-                                    onUpdatePrompt={(agentId, systemPrompt) =>
-                                        updateAgent(agentId, (current) => ({
-                                            ...current,
-                                            systemPrompt,
-                                        }))
-                                    }
-                                    onDelete={removeAgent}
-                                />
-                            ))}
-                        </ul>
-                    </div>
-                </details>
-            </aside>
-        </section>
-    );
+	return (
+		<div className="grid gap-4 xl:grid-cols-[300px_minmax(0,1fr)]">
+			<aside className="flex flex-col gap-4">
+				<Card>
+					<div className="flex items-center justify-between">
+						<h2 className="text-lg font-semibold">Assistants</h2>
+						<Button
+							variant="ghost"
+							disabled={!canCreate}
+							onClick={handleCreateAgent}
+						>
+							New
+						</Button>
+					</div>
+					<ul className="flex flex-col gap-2">
+						{agents.map((agent) => (
+							<AssistantAccordionItem
+								key={agent.id}
+								agent={agent}
+								isOpen={openAssistantId === agent.id}
+								canDelete={canDelete}
+								onToggle={handleToggleAgent}
+								onUpdateName={handleUpdateName}
+								onUpdatePrompt={handleUpdatePrompt}
+								onDelete={handleDeleteAgent}
+							/>
+						))}
+					</ul>
+				</Card>
+			</aside>
+			<Card className="flex-1">
+				<h2 className="text-lg font-semibold">Conversation</h2>
+				<p className="text-sm text-muted-foreground">
+					This is where the conversation with the selected assistant
+					will go.
+				</p>
+			</Card>
+		</div>
+	);
 }

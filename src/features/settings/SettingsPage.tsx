@@ -4,6 +4,9 @@ import { WINDOW_SIZE_LABELS } from "./windowSizeLabels";
 import { useSettingsApiKey } from "./useSettingsApiKey";
 import type { SettingsPageProps } from "./types";
 
+const controlClass =
+    "w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
+
 interface SaveKeyButtonProps {
     canSubmit: boolean;
 }
@@ -55,37 +58,45 @@ export function SettingsPage({
     });
 
     return (
-        <section className="settings-page">
-            <header className="settings-header">
-                <h2>Settings</h2>
+        <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h2 className="text-xl font-semibold tracking-tight">
+                        Settings
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                        Configure model behavior, appearance, and credentials.
+                    </p>
+                </div>
+
                 <Button variant="ghost" onClick={onBack}>
                     Back to Assistant
                 </Button>
-            </header>
+            </div>
 
-            <div className="settings-grid">
-                <Card className="settings-card">
-                    <h3>AI Settings</h3>
-                    <p
-                        style={{
-                            fontSize: "0.9rem",
-                            color: "var(--text-soft)",
-                        }}
-                    >
-                        API Key:{" "}
-                        <strong>
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                <Card className="flex flex-col gap-4">
+                    <div>
+                        <h3 className="text-base font-semibold">
+                            API Credentials
+                        </h3>
+                        <p className="text-xs text-muted-foreground">
+                            Your key is stored securely and used for requests.
+                        </p>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2 rounded-lg border bg-background p-3">
+                        <span className="font-mono text-sm text-muted-foreground">
                             {keyPreview === "<loading>"
                                 ? "Loading..."
                                 : keyPreview}
-                        </strong>
-                    </p>
-
-                    <div className="inline-row">
-                        <Button variant="primary" onClick={openKeyModal}>
-                            Set Secret Key
-                        </Button>
-                        {keyPreview !== "<not found>" &&
-                            keyPreview !== "<loading>" && (
+                        </span>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Button variant="primary" onClick={openKeyModal}>
+                                Set Secret Key
+                            </Button>
+                            {keyPreview !== "<not found>" &&
+                            keyPreview !== "<loading>" ? (
                                 <Button
                                     variant="ghost"
                                     danger
@@ -94,116 +105,138 @@ export function SettingsPage({
                                 >
                                     Clear Key
                                 </Button>
-                            )}
+                            ) : null}
+                        </div>
                     </div>
 
-                    <div
-                        style={{
-                            marginTop: "1.5rem",
-                            paddingTop: "1.5rem",
-                            borderTop: "1px solid var(--border-color)",
-                        }}
+                    <details
+                        className="group rounded-lg border bg-background"
+                        open={showAdvanced}
                     >
-                        <Button
-                            variant="ghost"
-                            onClick={toggleAdvanced}
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "0.5rem",
-                                marginBottom: "1rem",
+                        <summary
+                            className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 [::-webkit-details-marker]:hidden"
+                            onClick={(event) => {
+                                event.preventDefault();
+                                toggleAdvanced();
                             }}
                         >
-                            <span>{showAdvanced ? "▼" : "▶"}</span>
-                            <span>Advanced Settings</span>
-                        </Button>
+                            <span className="text-sm font-medium">
+                                Advanced Model Settings
+                            </span>
+                            <span className="text-xs text-muted-foreground transition group-open:rotate-90">
+                                ▸
+                            </span>
+                        </summary>
 
-                        {showAdvanced && (
-                            <div style={{ marginLeft: "1rem" }}>
-                                <label htmlFor="global-model">Model</label>
-                                <input
-                                    id="global-model"
-                                    value={settings.model.model}
-                                    onChange={(event) =>
-                                        onUpdateSettings({
-                                            ...settings,
-                                            model: {
-                                                ...settings.model,
-                                                model: event.target.value,
-                                            },
-                                        })
-                                    }
-                                    placeholder="gpt-4o-mini"
-                                />
+                        <div className="grid gap-3 border-t p-3">
+                            <label
+                                htmlFor="global-model"
+                                className="text-xs font-medium text-muted-foreground"
+                            >
+                                Model
+                            </label>
+                            <input
+                                id="global-model"
+                                className={controlClass}
+                                value={settings.model.model}
+                                onChange={(event) =>
+                                    onUpdateSettings({
+                                        ...settings,
+                                        model: {
+                                            ...settings.model,
+                                            model: event.target.value,
+                                        },
+                                    })
+                                }
+                                placeholder="gpt-4o-mini"
+                            />
 
-                                <div className="settings-grid compact">
-                                    <div>
-                                        <label htmlFor="global-temp">
-                                            Temperature
-                                        </label>
-                                        <input
-                                            id="global-temp"
-                                            type="number"
-                                            min={0}
-                                            max={2}
-                                            step={0.1}
-                                            value={settings.model.temperature}
-                                            onChange={(event) =>
-                                                onUpdateSettings({
-                                                    ...settings,
-                                                    model: {
-                                                        ...settings.model,
-                                                        temperature: Number(
-                                                            event.target.value,
-                                                        ),
-                                                    },
-                                                })
-                                            }
-                                        />
-                                    </div>
+                            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                                <div>
+                                    <label
+                                        htmlFor="global-temp"
+                                        className="text-xs font-medium text-muted-foreground"
+                                    >
+                                        Temperature
+                                    </label>
+                                    <input
+                                        id="global-temp"
+                                        className={`${controlClass} mt-1`}
+                                        type="number"
+                                        min={0}
+                                        max={2}
+                                        step={0.1}
+                                        value={settings.model.temperature}
+                                        onChange={(event) =>
+                                            onUpdateSettings({
+                                                ...settings,
+                                                model: {
+                                                    ...settings.model,
+                                                    temperature: Number(
+                                                        event.target.value,
+                                                    ),
+                                                },
+                                            })
+                                        }
+                                    />
+                                </div>
 
-                                    <div>
-                                        <label htmlFor="global-max-tokens">
-                                            Max tokens
-                                        </label>
-                                        <input
-                                            id="global-max-tokens"
-                                            type="number"
-                                            min={1}
-                                            step={1}
-                                            value={
-                                                settings.model.maxTokens ?? ""
-                                            }
-                                            onChange={(event) =>
-                                                onUpdateSettings({
-                                                    ...settings,
-                                                    model: {
-                                                        ...settings.model,
-                                                        maxTokens: event.target
-                                                            .value
-                                                            ? Number(
-                                                                  event.target
-                                                                      .value,
-                                                              )
-                                                            : null,
-                                                    },
-                                                })
-                                            }
-                                        />
-                                    </div>
+                                <div>
+                                    <label
+                                        htmlFor="global-max-tokens"
+                                        className="text-xs font-medium text-muted-foreground"
+                                    >
+                                        Max Tokens
+                                    </label>
+                                    <input
+                                        id="global-max-tokens"
+                                        className={`${controlClass} mt-1`}
+                                        type="number"
+                                        min={1}
+                                        step={1}
+                                        value={settings.model.maxTokens ?? ""}
+                                        onChange={(event) =>
+                                            onUpdateSettings({
+                                                ...settings,
+                                                model: {
+                                                    ...settings.model,
+                                                    maxTokens: event.target
+                                                        .value
+                                                        ? Number(
+                                                              event.target
+                                                                  .value,
+                                                          )
+                                                        : null,
+                                                },
+                                            })
+                                        }
+                                    />
                                 </div>
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    </details>
                 </Card>
 
-                <Card className="settings-card">
-                    <h3>Behavior</h3>
+                <Card className="flex flex-col gap-4">
+                    <div>
+                        <h3 className="text-base font-semibold">
+                            Behavior & Appearance
+                        </h3>
+                        <p className="text-xs text-muted-foreground">
+                            Adjust interaction flow and text scaling.
+                        </p>
+                    </div>
 
-                    <label className="stack-row" htmlFor="toggle-window-size">
-                        <span>UI text size</span>
+                    <label
+                        className="flex flex-col gap-1.5"
+                        htmlFor="toggle-window-size"
+                    >
+                        <span className="text-xs font-medium text-muted-foreground">
+                            UI Text Size
+                        </span>
                         <select
                             id="toggle-window-size"
+                            className={controlClass}
                             value={settings.windowSize}
                             onChange={(event) =>
                                 onUpdateSettings({
@@ -249,23 +282,35 @@ export function SettingsPage({
                 </Card>
             </div>
 
-            {showKeyModal && (
-                <div className="modal-overlay">
+            {showKeyModal ? (
+                <div className="fixed inset-0 z-50 grid place-content-center bg-black/60 p-3 backdrop-blur-sm">
                     <Button
                         variant="unstyled"
-                        className="modal-backdrop"
+                        className="absolute inset-0 z-0"
                         aria-label="Close API key dialog"
                         onClick={closeKeyModal}
                     />
-                    <div className="modal-content">
-                        <h2>Set Secret Key</h2>
 
-                        <form action={saveKeyAction}>
-                            <label htmlFor="modal-api-key">API Key</label>
+                    <div className="relative z-10 flex w-full max-w-md flex-col gap-4 rounded-2xl border bg-card p-6 shadow-2xl animate-[shell-enter_180ms_cubic-bezier(0.2,0.8,0.2,1)]">
+                        <h2 className="text-2xl font-semibold tracking-tight">
+                            Set Secret Key
+                        </h2>
+
+                        <form
+                            action={saveKeyAction}
+                            className="flex flex-col gap-3"
+                        >
+                            <label
+                                htmlFor="modal-api-key"
+                                className="text-sm font-medium"
+                            >
+                                API Key
+                            </label>
                             <input
                                 id="modal-api-key"
                                 name="apiKey"
                                 type="password"
+                                className={controlClass}
                                 value={apiKeyDraft}
                                 onChange={(event) =>
                                     setApiKeyDraft(event.target.value)
@@ -274,12 +319,16 @@ export function SettingsPage({
                                 autoFocus
                             />
 
-                            <label htmlFor="modal-api-endpoint">
+                            <label
+                                htmlFor="modal-api-endpoint"
+                                className="text-sm font-medium"
+                            >
                                 API Endpoint
                             </label>
                             <input
                                 id="modal-api-endpoint"
                                 type="url"
+                                className={controlClass}
                                 value={settings.apiBaseUrl}
                                 onChange={(event) =>
                                     onUpdateSettings({
@@ -293,16 +342,17 @@ export function SettingsPage({
                             {saveError ? (
                                 <p
                                     role="alert"
-                                    style={{ color: "var(--danger)" }}
+                                    className="text-sm text-rose-600 dark:text-rose-300"
                                 >
                                     {saveError}
                                 </p>
                             ) : null}
 
-                            <div className="modal-actions">
+                            <div className="mt-1 flex gap-2">
                                 <Button
                                     type="button"
                                     variant="ghost"
+                                    className="flex-1"
                                     onClick={closeKeyModal}
                                     disabled={isSavingKey}
                                 >
@@ -315,7 +365,7 @@ export function SettingsPage({
                         </form>
                     </div>
                 </div>
-            )}
-        </section>
+            ) : null}
+        </div>
     );
 }

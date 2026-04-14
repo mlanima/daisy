@@ -21,7 +21,7 @@ export function QuickOverflowMenu({
 
     return (
         <div
-            className="quick-overflow-menu"
+            className="flex max-h-40 flex-col gap-1 overflow-auto rounded-lg border border-slate-300 bg-white p-1 dark:border-slate-700 dark:bg-slate-900"
             role="menu"
             aria-label="More agents"
         >
@@ -30,7 +30,12 @@ export function QuickOverflowMenu({
                     key={agent.id}
                     variant="unstyled"
                     role="menuitem"
-                    className={`quick-overflow-item ${selectedAgentId === agent.id ? "active" : ""}`}
+                    className={[
+                        "w-full rounded-md border border-transparent px-2 py-1 text-left text-inherit transition",
+                        selectedAgentId === agent.id
+                            ? "border-slate-400 bg-slate-100 text-slate-900 dark:border-slate-500 dark:bg-slate-800 dark:text-slate-100"
+                            : "text-slate-700 hover:border-slate-300 hover:bg-slate-50 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-800/70",
+                    ].join(" ")}
                     onClick={() => onSelectAgent(agent.id)}
                 >
                     {agent.name}

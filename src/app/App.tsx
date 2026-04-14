@@ -15,8 +15,10 @@ function AppContent() {
 
     if (!controller) {
         return (
-            <main className="boot-screen">
-                <h1>Launching Assistant...</h1>
+            <main className="grid min-h-[68vh] place-content-center gap-2 text-center">
+                <h1 className="text-xl font-semibold tracking-tight">
+                    Launching Assistant...
+                </h1>
             </main>
         );
     }
@@ -33,17 +35,23 @@ function AppContent() {
 
     if (isBootstrapping) {
         return (
-            <main className="boot-screen">
-                <h1>Launching Assistant...</h1>
+            <main className="grid min-h-[68vh] place-content-center gap-2 text-center">
+                <h1 className="text-xl font-semibold tracking-tight">
+                    Launching Assistant...
+                </h1>
             </main>
         );
     }
 
     if (!snapshot || !selectedAgent) {
         return (
-            <main className="boot-screen">
-                <h1>Failed to initialize app state.</h1>
-                <p>{status.message || "Please restart the application."}</p>
+            <main className="grid min-h-[68vh] place-content-center gap-2 text-center">
+                <h1 className="text-xl font-semibold tracking-tight text-rose-600 dark:text-rose-300">
+                    Failed to initialize app state.
+                </h1>
+                <p className="text-sm">
+                    {status.message || "Please restart the application."}
+                </p>
             </main>
         );
     }
@@ -53,32 +61,41 @@ function AppContent() {
     }
 
     return (
-        <main className="app-shell">
-            <header className="app-header">
-                <div>
-                    <h1>AIDS Desktop Assistant</h1>
-                    <p>
-                        Capture selected text with Ctrl+C, Ctrl+C and process it
-                        instantly.
-                    </p>
-                </div>
+        <main className="mx-auto flex w-full max-w-7xl flex-col gap-4">
+            <header className="relative overflow-hidden rounded-lg border bg-card p-4 shadow-sm">
+                <div className="relative z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div className="space-y-1.5">
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                            AIDS Assistant
+                        </h1>
+                        <p className="text-sm text-muted-foreground">
+                            Capture text with Ctrl+C, Ctrl+C and run focused AI
+                            workflows quickly.
+                        </p>
+                    </div>
 
-                <nav className="view-tabs" aria-label="Views">
-                    <Button
-                        variant="tab"
-                        active={view === "assistant"}
-                        onClick={() => setView("assistant")}
+                    <nav
+                        className="inline-flex rounded-lg bg-muted p-1"
+                        aria-label="Views"
                     >
-                        Assistant
-                    </Button>
-                    <Button
-                        variant="tab"
-                        active={view === "settings"}
-                        onClick={() => setView("settings")}
-                    >
-                        Settings
-                    </Button>
-                </nav>
+                        <Button
+                            variant="tab"
+                            active={view === "assistant"}
+                            className="px-3.5"
+                            onClick={() => setView("assistant")}
+                        >
+                            Assistant
+                        </Button>
+                        <Button
+                            variant="tab"
+                            active={view === "settings"}
+                            className="px-3.5"
+                            onClick={() => setView("settings")}
+                        >
+                            Settings
+                        </Button>
+                    </nav>
+                </div>
             </header>
 
             <StatusBanner tone={status.tone} message={status.message} />
