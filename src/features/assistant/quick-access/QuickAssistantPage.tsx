@@ -62,6 +62,7 @@ export function QuickAssistantPage({
                     <QuickOverflowMenu
                         agents={orderedAgents}
                         anchorRef={dropdownAnchorRef}
+                        boundaryRef={shellRef}
                         selectedAgentId={selectedAgentId}
                         isOpen={isOverflowOpen}
                         onSelectAgent={selectHiddenAgent}
