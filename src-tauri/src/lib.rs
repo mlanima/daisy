@@ -115,6 +115,9 @@ fn format_agent_run_error(context: &PreparedAgentRunContext, details: &str) -> S
 
 fn show_main_window(app: &tauri::AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
+        if let Some(icon) = app.default_window_icon().cloned() {
+            let _ = window.set_icon(icon);
+        }
         let _ = window.set_skip_taskbar(false);
         let _ = window.show();
         let _ = window.unminimize();
@@ -371,6 +374,9 @@ pub fn run() {
             let _tray = tray_builder.build(app)?;
 
             if let Some(main_window) = app.get_webview_window("main") {
+                if let Some(icon) = app.default_window_icon().cloned() {
+                    let _ = main_window.set_icon(icon);
+                }
                 let _ = main_window.hide();
                 let _ = main_window.set_skip_taskbar(true);
             }

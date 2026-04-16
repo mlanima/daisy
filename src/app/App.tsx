@@ -75,9 +75,15 @@ function AppContent() {
                                     Desktop AI Workflow
                                 </span>
                                 <div className="space-y-1.5">
-                                    <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-                                        AIDS Assistant
-                                    </h1>
+                                    <div className="flex items-center gap-3">
+                                        <span
+                                            aria-hidden="true"
+                                            className="app-brand-logo"
+                                        />
+                                        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+                                            AIDS Assistant
+                                        </h1>
+                                    </div>
                                     <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
                                         Capture text with Ctrl+C, Ctrl+C and
                                         route it through focused agent workflows

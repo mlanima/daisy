@@ -204,6 +204,9 @@ fn show_quick_window(
     let target_position = Position::Physical(PhysicalPosition::new(target_x, target_y));
 
     if let Some(quick_window) = app_handle.get_webview_window("quick") {
+        if let Some(icon) = app_handle.default_window_icon().cloned() {
+            let _ = quick_window.set_icon(icon);
+        }
         let _ = quick_window.set_resizable(true);
         let _ = quick_window.set_size(tauri::LogicalSize::new(popup_width, popup_height));
         let _ = quick_window.set_position(target_position.clone());
@@ -225,6 +228,9 @@ fn show_quick_window(
 
     match builder.build() {
         Ok(window) => {
+            if let Some(icon) = app_handle.default_window_icon().cloned() {
+                let _ = window.set_icon(icon);
+            }
             let _ = window.set_focus();
         }
         Err(error) => {
