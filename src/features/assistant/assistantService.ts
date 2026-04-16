@@ -12,9 +12,30 @@ import {
     onClipboardCaptured,
     openMainWindow,
     resizeQuickWindow,
+    suppressQuickAutoHide,
     runAgentStream,
 } from "../../shared/services/tauri/tauriClient";
 import type { QuickWindowResizeResult } from "../../shared/services/tauri/tauriClient";
+
+let quickHideSuppressedUntil = 0;
+
+/** Temporarily disables blur-triggered quick-window auto-hide. */
+export function suppressQuickWindowAutoHide(durationMs = 1200): void {
+    const safeDuration = Math.max(durationMs, 0);
+
+    quickHideSuppressedUntil = Math.max(
+        quickHideSuppressedUntil,
+        Date.now() + safeDuration,
+    );
+
+    void suppressQuickAutoHide(safeDuration).catch(() => {
+        // Keep frontend-only suppression as fallback if backend call fails.
+    });
+}
+
+function isQuickHideSuppressed(): boolean {
+    return Date.now() < quickHideSuppressedUntil;
+}
 
 export interface QuickCaptureData {
     latestCapture: ClipboardCapturedEvent | null;
@@ -72,21 +93,48 @@ export async function resizeQuickAssistantWindow(
  */
 export function bindQuickWindowLifecycle(onFocus: () => void): () => void {
     const webviewWindow = getCurrentWebviewWindow();
+    let blurTimer: ReturnType<typeof setTimeout> | null = null;
 
     /** Forwards focus to caller so quick window can refresh capture content. */
     const handleFocus = () => {
+        if (blurTimer) {
+            clearTimeout(blurTimer);
+            blurTimer = null;
+        }
+
         onFocus();
     };
 
     /** Hides quick window whenever focus is lost. */
     const handleBlur = () => {
-        void webviewWindow.hide();
+        if (isQuickHideSuppressed()) {
+            return;
+        }
+
+        if (blurTimer) {
+            clearTimeout(blurTimer);
+        }
+
+        blurTimer = setTimeout(() => {
+            blurTimer = null;
+
+            if (document.hasFocus() || isQuickHideSuppressed()) {
+                return;
+            }
+
+            void webviewWindow.hide();
+        }, 140);
     };
 
     window.addEventListener("focus", handleFocus);
     window.addEventListener("blur", handleBlur);
 
     return () => {
+        if (blurTimer) {
+            clearTimeout(blurTimer);
+            blurTimer = null;
+        }
+
         window.removeEventListener("focus", handleFocus);
         window.removeEventListener("blur", handleBlur);
     };

@@ -6,7 +6,11 @@ export function QuickAssistantView() {
     const controller = useAppControllerStore((state) => state.controller);
 
     if (!controller) {
-        return null;
+        return (
+            <main className="grid min-h-18 place-content-center px-3 py-2 text-center text-sm text-muted-foreground">
+                Loading quick assistant...
+            </main>
+        );
     }
 
     const {
@@ -22,7 +26,11 @@ export function QuickAssistantView() {
     } = controller;
 
     if (!snapshot) {
-        return null;
+        return (
+            <main className="grid min-h-18 place-content-center px-3 py-2 text-center text-sm text-muted-foreground">
+                Restoring quick assistant...
+            </main>
+        );
     }
 
     return (

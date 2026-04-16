@@ -47,14 +47,18 @@ export function QuickOverflowMenu({
             }
 
             const rect = anchor.getBoundingClientRect();
-            const boundary = boundaryRef.current?.getBoundingClientRect() ?? null;
+            const boundary =
+                boundaryRef.current?.getBoundingClientRect() ?? null;
             const viewportWidth = globalThis.innerWidth;
             const viewportHeight = globalThis.innerHeight;
             const edgePadding = 8;
             const gap = 6;
             const framePadding = 6;
             const boundsLeft = boundary
-                ? Math.max(edgePadding, Math.round(boundary.left + framePadding))
+                ? Math.max(
+                      edgePadding,
+                      Math.round(boundary.left + framePadding),
+                  )
                 : edgePadding;
             const boundsRight = boundary
                 ? Math.min(
@@ -73,10 +77,7 @@ export function QuickOverflowMenu({
                 : viewportHeight - edgePadding;
             const boundsWidth = Math.max(140, boundsRight - boundsLeft);
             const desiredWidth = Math.max(Math.round(rect.width), 192);
-            const width = Math.min(
-                Math.max(140, desiredWidth),
-                boundsWidth,
-            );
+            const width = Math.min(Math.max(140, desiredWidth), boundsWidth);
             const spaceRight = boundsRight - rect.right - gap;
             const spaceLeft = rect.left - boundsLeft - gap;
             const preferRight = spaceRight >= 120 || spaceRight >= spaceLeft;
@@ -84,16 +85,16 @@ export function QuickOverflowMenu({
                 ? rect.right + gap
                 : rect.left - width - gap;
             const maxLeft = Math.max(boundsLeft, boundsRight - width);
-            const left = Math.min(Math.max(Math.round(proposedLeft), boundsLeft), maxLeft);
+            const left = Math.min(
+                Math.max(Math.round(proposedLeft), boundsLeft),
+                maxLeft,
+            );
             const maxTop = Math.max(boundsTop, boundsBottom - 120);
             const top = Math.min(
                 Math.max(Math.round(rect.top), boundsTop),
                 maxTop,
             );
-            const maxHeight = Math.max(
-                80,
-                Math.min(420, boundsBottom - top),
-            );
+            const maxHeight = Math.max(80, Math.min(420, boundsBottom - top));
 
             setPosition({
                 top,

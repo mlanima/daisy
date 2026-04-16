@@ -138,6 +138,13 @@ export async function openMainWindow(): Promise<void> {
     return invoke("open_main_window");
 }
 
+/** Temporarily suppresses backend quick-window auto-hide on focus loss. */
+export async function suppressQuickAutoHide(durationMs: number): Promise<void> {
+    return invoke("suppress_quick_auto_hide", {
+        durationMs: Math.max(0, Math.floor(durationMs)),
+    });
+}
+
 /** Requests backend resize for quick window and validates resulting dimensions. */
 export async function resizeQuickWindow(
     width: number,

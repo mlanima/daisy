@@ -9,6 +9,7 @@ use tauri::{
 const DOUBLE_COPY_WINDOW_MS: u128 = 650;
 const POST_POPUP_SUPPRESSION_MS: u128 = 450;
 const SELECTION_ANCHOR_TTL_MS: u128 = 8_000;
+const QUICK_WINDOW_BOTTOM_INSET: f64 = 26.0;
 
 pub fn start_listener(app_handle: AppHandle) {
     std::thread::spawn(move || {
@@ -177,7 +178,7 @@ fn resolve_anchor_position(
 }
 
 fn quick_popup_dimensions(_window_size: WindowSize) -> (f64, f64, f64) {
-    (492.0, 108.0, 372.0)
+    (492.0, 128.0, 492.0)
 }
 
 fn show_quick_window(
@@ -262,7 +263,9 @@ fn clamp_to_monitor_bounds(
         let min_x = position.x as f64;
         let min_y = position.y as f64;
         let max_x = (min_x + size.width as f64 - popup_width).max(min_x);
-        let max_y = (min_y + size.height as f64 - popup_height).max(min_y);
+        let max_y =
+            (min_y + size.height as f64 - popup_height - QUICK_WINDOW_BOTTOM_INSET)
+                .max(min_y);
 
         (x.clamp(min_x, max_x), y.clamp(min_y, max_y))
     } else {

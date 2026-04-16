@@ -63,7 +63,7 @@ export function SettingsPage({
             <div className="flex items-start gap-3 rounded-2xl border border-border/70 bg-card/75 p-4 md:items-center">
                 <Button
                     variant="ghost"
-                    className="h-14 w-14 p-0 text-muted-foreground !border-transparent !bg-transparent hover:!border-transparent hover:!bg-transparent hover:text-foreground hover:scale-110"
+                    className="h-14 w-14 p-0 text-muted-foreground border-transparent! bg-transparent! hover:border-transparent! hover:bg-transparent! hover:text-foreground hover:scale-110"
                     aria-label="Back to assistant"
                     onClick={onBack}
                 >
