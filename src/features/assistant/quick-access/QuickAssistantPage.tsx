@@ -327,7 +327,7 @@ export function QuickAssistantPage({
 
                 {hasVisibleResponse ? (
                     <div
-                        className="quick-response custom-scrollbar min-h-0 overflow-x-hidden overflow-y-auto px-1.5 py-1"
+                        className="quick-response custom-scrollbar min-h-0 px-1.5 py-1"
                         style={responsePaneStyle}
                     >
                         <pre className="quick-output m-0 min-h-0 whitespace-pre-wrap wrap-break-word rounded-lg border border-transparent bg-transparent px-1.5 py-1.5 font-mono leading-relaxed text-card-foreground">
