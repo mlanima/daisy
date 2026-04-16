@@ -213,7 +213,8 @@
     flex-direction: column;
     min-height: 56px;
     flex: 1 1 auto;
-    overflow: visible;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .quick-shell.has-output .quick-output {
@@ -221,7 +222,7 @@
     min-height: 0;
     height: auto;
     width: 100%;
-    overflow: visible;
+    overflow-wrap: anywhere;
 }
 
 .quick-dragbar {
@@ -363,7 +364,7 @@
 .quick-split.is-active .quick-output {
     min-height: 0;
     height: auto;
-    overflow: visible;
+    overflow-wrap: anywhere;
     scrollbar-width: thin;
 }
 
