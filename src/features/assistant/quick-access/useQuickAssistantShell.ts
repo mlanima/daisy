@@ -194,7 +194,6 @@ export function useQuickAssistantShell({
     }, [
         forceSplit,
         isOverflowOpen,
-        promptText,
         responseText,
         isSending,
         windowSize,
