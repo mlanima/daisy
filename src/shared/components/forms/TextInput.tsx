@@ -1,7 +1,9 @@
 import type { InputHTMLAttributes, ReactNode } from "react";
 
-export interface TextInputProps
-    extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {
+export interface TextInputProps extends Omit<
+    InputHTMLAttributes<HTMLInputElement>,
+    "type"
+> {
     label?: ReactNode;
     error?: string;
     helperText?: string;
@@ -31,12 +33,7 @@ export function TextInput({
                     {label}
                 </label>
             )}
-            <input
-                id={id}
-                type="text"
-                className={combinedClass}
-                {...props}
-            />
+            <input id={id} type="text" className={combinedClass} {...props} />
             {error && (
                 <p className="text-xs text-rose-600 dark:text-rose-400">
                     {error}

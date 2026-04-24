@@ -20,11 +20,10 @@ export function CreateAgentDialog({
     const [name, setName] = useState("");
     const [systemPrompt, setSystemPrompt] = useState("");
 
-    const canSubmit =
-        name.trim().length > 0 || systemPrompt.trim().length > 0;
+    const canSubmit = name.trim().length > 0 || systemPrompt.trim().length > 0;
 
     const handleSubmit = useCallback(
-        (event: React.FormEvent) => {
+        (event: React.FormEvent<HTMLFormElement>) => {
             event.preventDefault();
             if (canSubmit) {
                 onCreate(name, systemPrompt);
@@ -50,11 +49,7 @@ export function CreateAgentDialog({
             size="md"
         >
             <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
-                <AgentNameInput
-                    agentId="new"
-                    value={name}
-                    onChange={setName}
-                />
+                <AgentNameInput agentId="new" value={name} onChange={setName} />
 
                 <AgentSystemPromptInput
                     agentId="new"

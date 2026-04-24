@@ -20,7 +20,7 @@ export function PromptForm({
     onClearError,
 }: Readonly<PromptFormProps>) {
     const handleSubmit = useCallback(
-        (event: React.FormEvent) => {
+        (event: React.FormEvent<HTMLFormElement>) => {
             event.preventDefault();
             onSend();
         },
@@ -50,11 +50,7 @@ export function PromptForm({
                     <div className="grow rounded-xl border border-rose-400/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-700 dark:text-rose-200">
                         {errorDetails}
                     </div>
-                    <Button
-                        variant="ghost"
-                        danger
-                        onClick={onClearError}
-                    >
+                    <Button variant="ghost" danger onClick={onClearError}>
                         Dismiss
                     </Button>
                 </div>

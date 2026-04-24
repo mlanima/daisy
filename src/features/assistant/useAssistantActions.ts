@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import type {
-    Agent,
-    RunAgentRequest,
-} from "../../shared/types/appState";
+import type { Agent, RunAgentRequest } from "../../shared/types/appState";
 import { updateRecentAgentIds } from "./agentUtils";
 import {
     fetchQuickCaptureData,

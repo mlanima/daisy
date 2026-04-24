@@ -8,10 +8,7 @@ export function useAccordionState() {
         setOpenId((current) => (current === id ? null : id));
     }, []);
 
-    const isOpen = useCallback(
-        (id: string) => openId === id,
-        [openId],
-    );
+    const isOpen = useCallback((id: string) => openId === id, [openId]);
 
     return { openId, toggle, isOpen };
 }

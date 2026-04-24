@@ -77,10 +77,7 @@ export function AgentStudio({
                     <p className="text-sm text-muted-foreground">
                         {agents.length} total agents
                     </p>
-                    <Button
-                        variant="primary"
-                        onClick={onCreateAgent}
-                    >
+                    <Button variant="primary" onClick={onCreateAgent}>
                         New Agent
                     </Button>
                 </div>

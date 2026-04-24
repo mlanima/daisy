@@ -1,7 +1,9 @@
 import type { TextareaHTMLAttributes, ReactNode } from "react";
 
-export interface TextareaInputProps
-    extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, ""> {
+export interface TextareaInputProps extends Omit<
+    TextareaHTMLAttributes<HTMLTextAreaElement>,
+    ""
+> {
     label?: ReactNode;
     error?: string;
     helperText?: string;
@@ -21,9 +23,7 @@ export function TextareaInput({
     className,
     ...props
 }: Readonly<TextareaInputProps>) {
-    const combinedClass = [textareaClass, className]
-        .filter(Boolean)
-        .join(" ");
+    const combinedClass = [textareaClass, className].filter(Boolean).join(" ");
 
     return (
         <div className="flex flex-col gap-2">

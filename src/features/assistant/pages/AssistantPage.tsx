@@ -3,10 +3,7 @@ import { Button, Card } from "../../../shared/components";
 import { AssistantLayout } from "../layouts";
 import { ResponseDisplay, AgentInfo, StatusIndicator } from "../displays";
 import { PromptForm, AgentSelector } from "../forms";
-import {
-    CreateAgentDialog,
-    AgentStudio,
-} from "../dialogs";
+import { CreateAgentDialog, AgentStudio } from "../dialogs";
 import { useAccordionState } from "../accordion";
 import { useAssistantAgentManagement } from "../useAssistantAgentManagement";
 import type { AssistantPageProps } from "../types";
@@ -34,20 +31,18 @@ export function AssistantPage({
     const { openId: openAgentId, toggle: toggleAgent } = useAccordionState();
     const [isStudioOpen, setIsStudioOpen] = useState(false);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
-    const [studioPhase, setStudioPhase] = useState<"closed" | "opening" | "open" | "closing">("closed");
+    const [studioPhase, setStudioPhase] = useState<
+        "closed" | "opening" | "open" | "closing"
+    >("closed");
 
     // Agent management hook
-    const {
-        activeAgent,
-        updateAgent,
-        removeAgent,
-        addAgent,
-    } = useAssistantAgentManagement({
-        agents,
-        onUpdateAgents,
-        selectedAgentId,
-        responseText,
-    });
+    const { activeAgent, updateAgent, removeAgent, addAgent } =
+        useAssistantAgentManagement({
+            agents,
+            onUpdateAgents,
+            selectedAgentId,
+            responseText,
+        });
 
     const isStudioVisible = studioPhase !== "closed";
     const isStudioExpanded = studioPhase === "open";
@@ -55,7 +50,9 @@ export function AssistantPage({
     // Studio animation handlers
     const openStudio = useCallback(() => {
         setIsStudioOpen(true);
-        setStudioPhase((current) => (current === "closed" ? "opening" : current));
+        setStudioPhase((current) =>
+            current === "closed" ? "opening" : current,
+        );
     }, []);
 
     const closeStudio = useCallback(() => {
