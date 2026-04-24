@@ -45,10 +45,7 @@ interface AppStoreState {
 /** Store actions. */
 interface AppStoreActions {
     // Bootstrap & Initialization
-    initializeApp: (
-        snapshot: AppStateSnapshot,
-        apiKeyPresent: boolean,
-    ) => void;
+    initializeApp: (snapshot: AppStateSnapshot, apiKeyPresent: boolean) => void;
     completeBootstrap: () => void;
 
     // Navigation
@@ -82,7 +79,10 @@ function createErrorPresenter(): ErrorPresenter {
             if (error instanceof Error) {
                 return error.message;
             }
-            return String(error || "An unexpected error occurred");
+            if (!error) {
+                return "An unexpected error occurred";
+            }
+            return String(error);
         },
         getDetails(error: unknown): string {
             if (error instanceof Error) {
@@ -97,89 +97,88 @@ const errorPresenter = createErrorPresenter();
 
 /** Unified Zustand store for the entire app. */
 export const useAppStore = create<AppStore>((set: any) => ({
-        // Initial state
-        isBootstrapping: true,
-        isQuickWindow: detectQuickWindow(),
-        view: "assistant" as const,
-        snapshot: null,
-        apiKeyPresent: false,
-        promptText: "",
-        sourceText: "",
-        responseText: "",
-        isSending: false,
-        status: { tone: "idle", message: "" } as UiStatus,
-        lastErrorDetails: "",
+    // Initial state
+    isBootstrapping: true,
+    isQuickWindow: detectQuickWindow(),
+    view: "assistant" as const,
+    snapshot: null,
+    apiKeyPresent: false,
+    promptText: "",
+    sourceText: "",
+    responseText: "",
+    isSending: false,
+    status: { tone: "idle", message: "" } as UiStatus,
+    lastErrorDetails: "",
 
-        // Bootstrap
-        initializeApp: (snapshot: AppStateSnapshot, apiKeyPresent: boolean) => {
-            set({
-                snapshot,
-                apiKeyPresent,
-            });
-        },
-        completeBootstrap: () => {
-            set({ isBootstrapping: false });
-        },
+    // Bootstrap
+    initializeApp: (snapshot: AppStateSnapshot, apiKeyPresent: boolean) => {
+        set({
+            snapshot,
+            apiKeyPresent,
+        });
+    },
+    completeBootstrap: () => {
+        set({ isBootstrapping: false });
+    },
 
-        // Navigation
-        setView: (view: "assistant" | "settings") => {
-            set({ view });
-        },
+    // Navigation
+    setView: (view: "assistant" | "settings") => {
+        set({ view });
+    },
 
-        // Snapshot Management
-        setSnapshot: (snapshot: AppStateSnapshot) => {
-            set({ snapshot });
-        },
-        setApiKeyPresent: (present: boolean) => {
-            set({ apiKeyPresent: present });
-        },
+    // Snapshot Management
+    setSnapshot: (snapshot: AppStateSnapshot) => {
+        set({ snapshot });
+    },
+    setApiKeyPresent: (present: boolean) => {
+        set({ apiKeyPresent: present });
+    },
 
-        // Prompt & Response Flow
-        setPromptText: (text: string) => {
-            set({ promptText: text });
-        },
-        setSourceText: (text: string) => {
-            set({ sourceText: text });
-        },
-        setResponseText: (text: string) => {
-            set({ responseText: text });
-        },
-        setIsSending: (sending: boolean) => {
-            set({ isSending: sending });
-        },
-        applyCapturedText: (text: string) => {
-            set({
-                sourceText: text,
-                promptText: text,
-                responseText: "",
-            });
-        },
-        clearResponse: () => {
-            set({ responseText: "" });
-        },
+    // Prompt & Response Flow
+    setPromptText: (text: string) => {
+        set({ promptText: text });
+    },
+    setSourceText: (text: string) => {
+        set({ sourceText: text });
+    },
+    setResponseText: (text: string) => {
+        set({ responseText: text });
+    },
+    setIsSending: (sending: boolean) => {
+        set({ isSending: sending });
+    },
+    applyCapturedText: (text: string) => {
+        set({
+            sourceText: text,
+            promptText: text,
+            responseText: "",
+        });
+    },
+    clearResponse: () => {
+        set({ responseText: "" });
+    },
 
-        // Status & Error Feedback
-        setStatus: (tone: StatusTone, message: string) => {
-            set({ status: { tone, message } });
-        },
-        setError: (error: unknown, prefix?: string) => {
-            const message = errorPresenter.getMessage(error);
-            set({
-                status: {
-                    tone: "error" as const,
-                    message: prefix ? `${prefix}: ${message}` : message,
-                },
-                lastErrorDetails: errorPresenter.getDetails(error),
-            });
-        },
-        clearErrorDetails: () => {
-            set({ lastErrorDetails: "" });
-        },
-        clearStatus: () => {
-            set({ status: { tone: "idle", message: "" } });
-        },
-    }),
-);
+    // Status & Error Feedback
+    setStatus: (tone: StatusTone, message: string) => {
+        set({ status: { tone, message } });
+    },
+    setError: (error: unknown, prefix?: string) => {
+        const message = errorPresenter.getMessage(error);
+        set({
+            status: {
+                tone: "error" as const,
+                message: prefix ? `${prefix}: ${message}` : message,
+            },
+            lastErrorDetails: errorPresenter.getDetails(error),
+        });
+    },
+    clearErrorDetails: () => {
+        set({ lastErrorDetails: "" });
+    },
+    clearStatus: () => {
+        set({ status: { tone: "idle", message: "" } });
+    },
+}));
 
 /** Hook to subscribe to all state changes. */
 export function useAppState() {
@@ -210,9 +209,11 @@ export function usePromptFlow() {
 /** Hook to get assistant agent info. */
 export function useSelectedAgent() {
     const snapshot = useAppStore((state) => state.snapshot);
-    return snapshot?.agents.find(
-        (agent) => agent.id === snapshot.selectedAgentId,
-    ) ?? null;
+    return (
+        snapshot?.agents.find(
+            (agent) => agent.id === snapshot.selectedAgentId,
+        ) ?? null
+    );
 }
 
 /** Hook to get all agents. */

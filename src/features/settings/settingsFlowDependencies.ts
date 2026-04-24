@@ -1,5 +1,8 @@
 import { clearSecretApiKey, saveSecretApiKey } from "./settingsService";
-import { persistWorkspaceSnapshot, loadWorkspaceSnapshot } from "../../app/services/workspaceService";
+import {
+    persistWorkspaceSnapshot,
+    loadWorkspaceSnapshot,
+} from "../../app/services/workspaceService";
 import type { AppStateSnapshot } from "../../shared/types/appState";
 
 export interface SettingsFlowDependencies {

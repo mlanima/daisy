@@ -1,5 +1,9 @@
 import { SettingsPage } from "../../features/settings";
-import { useSnapshot, useNavigation, useApiKeyState } from "../../store/appStore";
+import {
+    useSnapshot,
+    useNavigation,
+    useApiKeyState,
+} from "../../store/appStore";
 import { useSettingsActions } from "../../features/settings/useSettingsActions";
 
 /** Renders the settings screen bound to store-backed actions. */

@@ -1,16 +1,22 @@
 import { useCallback } from "react";
 import { AssistantPage } from "../../features/assistant";
-import { useSnapshot, usePromptFlow, useUiFeedback } from "../../store/appStore";
+import {
+    useSnapshot,
+    usePromptFlow,
+    useUiFeedback,
+} from "../../store/appStore";
 import { useAssistantActions } from "../../features/assistant/useAssistantActions";
 
 /** Renders the full assistant workspace in the main window. */
 export function MainAssistantView() {
     const snapshot = useSnapshot();
-    const { promptText, responseText, isSending, setPromptText } = usePromptFlow();
+    const { promptText, responseText, isSending, setPromptText } =
+        usePromptFlow();
     const { lastErrorDetails, clearErrorDetails } = useUiFeedback();
-    const { sendCurrentPrompt, selectAgent, updateAgents } = useAssistantActions({
-        isQuickWindow: false,
-    });
+    const { sendCurrentPrompt, selectAgent, updateAgents } =
+        useAssistantActions({
+            isQuickWindow: false,
+        });
 
     if (!snapshot) {
         return null;

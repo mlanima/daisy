@@ -1,5 +1,8 @@
 import { useCallback } from "react";
-import type { AppSettings, AppStateSnapshot } from "../../shared/types/appState";
+import type {
+    AppSettings,
+    AppStateSnapshot,
+} from "../../shared/types/appState";
 import type { SettingsFlowDependencies } from "./settingsFlowDependencies";
 import { defaultSettingsFlowDependencies } from "./settingsFlowDependencies";
 import { useAppStore, useUiFeedback } from "../../store/appStore";
@@ -21,11 +24,13 @@ export function useSettingsActions(
     const activeDependencies =
         customDependencies ?? defaultSettingsFlowDependencies;
 
-    const { snapshot, setSnapshot, setApiKeyPresent } = useAppStore((state) => ({
-        snapshot: state.snapshot,
-        setSnapshot: state.setSnapshot,
-        setApiKeyPresent: state.setApiKeyPresent,
-    }));
+    const { snapshot, setSnapshot, setApiKeyPresent } = useAppStore(
+        (state) => ({
+            snapshot: state.snapshot,
+            setSnapshot: state.setSnapshot,
+            setApiKeyPresent: state.setApiKeyPresent,
+        }),
+    );
 
     const { setStatus, setError, clearErrorDetails } = useUiFeedback();
 
@@ -66,8 +71,7 @@ export function useSettingsActions(
         async (apiKey: string) => {
             try {
                 await activeDependencies.saveSecretApiKey(apiKey);
-                const updatedSnapshot =
-                    await activeDependencies.loadSnapshot();
+                const updatedSnapshot = await activeDependencies.loadSnapshot();
 
                 setSnapshot(updatedSnapshot);
                 setApiKeyPresent(true);

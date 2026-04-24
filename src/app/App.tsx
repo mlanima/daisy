@@ -1,12 +1,20 @@
 import { useEffect } from "react";
 import { Settings as SettingsIcon } from "lucide-react";
 import { Button } from "../shared/components";
-import { useAppStore, useSnapshot, useNavigation, useBootstrapState } from "../store/appStore";
+import {
+    useAppStore,
+    useSnapshot,
+    useNavigation,
+    useBootstrapState,
+} from "../store/appStore";
 import { MainWindowTitleBar } from "./components/MainWindowTitleBar";
 import { MainAssistantView } from "./views/MainAssistantView";
 import { QuickAssistantView } from "./views/QuickAssistantView";
 import { SettingsView } from "./views/SettingsView";
-import { bootstrapWorkspace, persistWorkspaceSnapshot } from "./services/workspaceService";
+import {
+    bootstrapWorkspace,
+    persistWorkspaceSnapshot,
+} from "./services/workspaceService";
 import "./styles/app-minimal.css";
 
 /**
@@ -14,12 +22,14 @@ import "./styles/app-minimal.css";
  */
 function useAppInitialization() {
     const { isBootstrapping, completeBootstrap } = useBootstrapState();
-    const { initializeApp, setSnapshot, setError, clearStatus } = useAppStore((state) => ({
-        initializeApp: state.initializeApp,
-        setSnapshot: state.setSnapshot,
-        setError: state.setError,
-        clearStatus: state.clearStatus,
-    }));
+    const { initializeApp, setSnapshot, setError, clearStatus } = useAppStore(
+        (state) => ({
+            initializeApp: state.initializeApp,
+            setSnapshot: state.setSnapshot,
+            setError: state.setError,
+            clearStatus: state.clearStatus,
+        }),
+    );
 
     const snapshot = useSnapshot();
 
@@ -58,7 +68,13 @@ function useAppInitialization() {
         return () => {
             mounted = false;
         };
-    }, [isBootstrapping, initializeApp, setError, clearStatus, completeBootstrap]);
+    }, [
+        isBootstrapping,
+        initializeApp,
+        setError,
+        clearStatus,
+        completeBootstrap,
+    ]);
 
     // Repair selected agent reference if needed
     useEffect(() => {

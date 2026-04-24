@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useRef } from "react";
-import type { Agent } from "../../shared/types/appState";
+import type {
+    Agent,
+    RunAgentRequest,
+} from "../../shared/types/appState";
 import { updateRecentAgentIds } from "./agentUtils";
 import {
     fetchQuickCaptureData,
@@ -9,11 +12,7 @@ import {
     defaultAssistantFlowDependencies,
     type AssistantFlowDependencies,
 } from "./assistantFlowDependencies";
-import {
-    useAppStore,
-    usePromptFlow,
-} from "../../store/appStore";
-import type { RunAgentRequest } from "../../shared/types/appState";
+import { useAppStore, usePromptFlow } from "../../store/appStore";
 
 interface AssistantActionsParams {
     isQuickWindow: boolean;
@@ -34,29 +33,23 @@ export function useAssistantActions({
     const activeDependencies = dependencies ?? defaultAssistantFlowDependencies;
 
     // Store state & actions
-    const {
-        snapshot,
-        setSnapshot,
-        setStatus,
-        setError,
-        clearErrorDetails,
-    } = useAppStore((state) => ({
-        snapshot: state.snapshot,
-        setSnapshot: state.setSnapshot,
-        setStatus: state.setStatus,
-        setError: state.setError,
-        clearErrorDetails: state.clearErrorDetails,
-    }));
+    const { snapshot, setSnapshot, setStatus, setError, clearErrorDetails } =
+        useAppStore((state) => ({
+            snapshot: state.snapshot,
+            setSnapshot: state.setSnapshot,
+            setStatus: state.setStatus,
+            setError: state.setError,
+            clearErrorDetails: state.clearErrorDetails,
+        }));
 
     const { promptText, setPromptText, applyCapturedText, setResponseText } =
         usePromptFlow();
 
-    const { isSending, setIsSending, responseText } =
-        useAppStore((state) => ({
-            isSending: state.isSending,
-            setIsSending: state.setIsSending,
-            responseText: state.responseText,
-        }));
+    const { isSending, setIsSending, responseText } = useAppStore((state) => ({
+        isSending: state.isSending,
+        setIsSending: state.setIsSending,
+        responseText: state.responseText,
+    }));
 
     const snapshotRef = useRef(snapshot);
     const promptRef = useRef(promptText);
@@ -114,7 +107,8 @@ export function useAssistantActions({
                 return;
             }
 
-            const agentId = overrides?.agentId ?? activeSnapshot.selectedAgentId;
+            const agentId =
+                overrides?.agentId ?? activeSnapshot.selectedAgentId;
             const promptToSend = (
                 overrides?.promptOverride ?? promptRef.current
             ).trim();
@@ -207,11 +201,9 @@ export function useAssistantActions({
             setSnapshot(nextSnapshot);
 
             // Persist to backend
-            try {
-                void activeDependencies.persistSnapshot(nextSnapshot);
-            } catch (error) {
+            activeDependencies.persistSnapshot(nextSnapshot).catch((error) => {
                 setError(error, "Failed to select agent");
-            }
+            });
         },
         [
             activeDependencies,
@@ -249,11 +241,9 @@ export function useAssistantActions({
             setSnapshot(nextSnapshot);
 
             // Persist to backend
-            try {
-                void activeDependencies.persistSnapshot(nextSnapshot);
-            } catch (error) {
+            activeDependencies.persistSnapshot(nextSnapshot).catch((error) => {
                 setError(error, "Failed to update agents");
-            }
+            });
         },
         [activeDependencies, setError, setSnapshot, snapshot],
     );
@@ -313,7 +303,11 @@ export function useAssistantActions({
                 unlistenClipboard =
                     await activeDependencies.subscribeClipboardCaptured(
                         (payload) => {
-                            if (closed || !isQuickWindow || !payload.text.trim()) {
+                            if (
+                                closed ||
+                                !isQuickWindow ||
+                                !payload.text.trim()
+                            ) {
                                 return;
                             }
 
