@@ -11,8 +11,8 @@ import { Button } from "../../../shared/components";
 import { suppressQuickWindowAutoHide } from "../assistantService";
 import type { QuickAssistantPageProps } from "../types";
 import { useQuickAssistantShell } from "./useQuickAssistantShell";
-import { QuickAgentTabs } from "./components/QuickAgentTabs";
-import { QuickOverflowMenu } from "./components/QuickOverflowMenu";
+import { AgentDropdownTrigger } from "../components/AgentDropdownTrigger";
+import { AgentDropdownMenu } from "../components/AgentDropdownMenu";
 
 type ResizeDirection = "South";
 
@@ -265,12 +265,12 @@ export function QuickAssistantPage({
 
             <div className="flex items-center justify-between gap-2 border-b border-border/65 px-2.5 py-2">
                 <div ref={dropdownAnchorRef} className="min-w-0">
-                    <QuickAgentTabs
-                        selectedAgent={selectedAgent}
-                        isOverflowOpen={isOverflowOpen}
-                        onToggleOverflow={toggleOverflow}
+                    <AgentDropdownTrigger
+                        label={selectedAgent?.name?.trim() || "Select agent"}
+                        isOpen={isOverflowOpen}
+                        onToggle={toggleOverflow}
                     />
-                    <QuickOverflowMenu
+                    <AgentDropdownMenu
                         agents={orderedAgents}
                         anchorRef={dropdownAnchorRef}
                         boundaryRef={shellRef}

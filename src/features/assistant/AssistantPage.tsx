@@ -1,8 +1,11 @@
 import type { Agent } from "../../shared/types/appState";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Settings as SettingsIcon } from "lucide-react";
 import { Button, Card } from "../../shared/components";
 import type { AssistantPageProps } from "./types";
 import { useAssistantAgentManagement } from "./useAssistantAgentManagement";
+import { AgentDropdownTrigger } from "./components/AgentDropdownTrigger";
+import { AgentDropdownMenu } from "./components/AgentDropdownMenu";
 
 const controlClass =
     "w-full rounded-xl border border-input/85 bg-background/70 px-3 py-2.5 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55 disabled:cursor-not-allowed disabled:opacity-50";
@@ -133,7 +136,13 @@ export function AssistantPage({
     onUpdateAgents,
     onClearErrorDetails,
 }: Readonly<AssistantPageProps>) {
+    const agentDropdownAnchorRef = useRef<HTMLDivElement | null>(null);
+    const assistantBoundaryRef = useRef<HTMLElement | null>(null);
+    const [isAgentDropdownOpen, setIsAgentDropdownOpen] = useState(false);
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+    const [studioPhase, setStudioPhase] = useState<
+        "closed" | "opening" | "open" | "closing"
+    >("closed");
     const [newAgentName, setNewAgentName] = useState("");
     const [newAgentPrompt, setNewAgentPrompt] = useState("");
 
@@ -159,6 +168,36 @@ export function AssistantPage({
     );
     const canSubmitNewAgent =
         newAgentName.trim().length > 0 || newAgentPrompt.trim().length > 0;
+    const isStudioVisible = studioPhase !== "closed";
+    const isStudioExpanded = studioPhase === "open";
+
+    useEffect(() => {
+        if (studioPhase !== "opening") {
+            return;
+        }
+
+        const frame = globalThis.requestAnimationFrame(() => {
+            setStudioPhase("open");
+        });
+
+        return () => {
+            globalThis.cancelAnimationFrame(frame);
+        };
+    }, [studioPhase]);
+
+    useEffect(() => {
+        if (studioPhase !== "closing") {
+            return;
+        }
+
+        const timeout = globalThis.setTimeout(() => {
+            setStudioPhase("closed");
+        }, 220);
+
+        return () => {
+            globalThis.clearTimeout(timeout);
+        };
+    }, [studioPhase]);
 
     const handleToggleAgent = (agentId: string) => {
         toggleAgentAccordion(agentId);
@@ -198,21 +237,49 @@ export function AssistantPage({
         handleCloseCreateDialog();
     };
 
+    const openStudio = () => {
+        setStudioPhase((current) => {
+            if (current === "closed") {
+                return "opening";
+            }
+
+            return current;
+        });
+    };
+
+    const closeStudio = () => {
+        setStudioPhase((current) => {
+            if (current === "closed" || current === "closing") {
+                return current;
+            }
+
+            return "closing";
+        });
+    };
+
+    const handleSelectAgent = (agentId: string) => {
+        onSelectAgent(agentId);
+        setIsAgentDropdownOpen(false);
+    };
+
     return (
-        <div className="grid gap-4">
-            <section className="grid min-h-0 gap-4">
-                <Card>
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                            <h2 className="text-xl font-semibold tracking-tight">
+        <div className="grid h-full min-h-0 gap-3">
+            <section
+                ref={assistantBoundaryRef}
+                className="grid min-h-0 gap-3 lg:grid-rows-[auto_minmax(0,1fr)]"
+            >
+                <Card className="gap-4 p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div className="min-w-0">
+                            <h2 className="truncate text-xl font-semibold tracking-tight">
                                 {activeAgent?.name || "Assistant"}
                             </h2>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="truncate text-sm text-muted-foreground">
                                 {activePromptPreview}
                             </p>
                         </div>
 
-                        <div className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-background/70 px-3 py-1.5 text-xs font-medium text-muted-foreground">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-background/80 px-3 py-1.5 text-sm font-medium text-muted-foreground">
                             <span
                                 className={`h-2 w-2 rounded-full ${isSending ? "bg-amber-400" : "bg-emerald-500"}`}
                             />
@@ -221,32 +288,64 @@ export function AssistantPage({
                     </div>
 
                     <form
-                        className="mt-1 grid gap-3"
+                        className="grid gap-3"
                         onSubmit={(event) => {
                             event.preventDefault();
                             onSend();
                         }}
                     >
-                        <label
-                            htmlFor="assistant-agent-select"
-                            className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground"
-                        >
-                            Agent
-                        </label>
-                        <select
-                            id="assistant-agent-select"
-                            className={controlClass}
-                            value={selectedAgentId ?? activeAgent?.id ?? ""}
-                            onChange={(event) =>
-                                onSelectAgent(event.target.value)
-                            }
-                        >
-                            {agents.map((agent) => (
-                                <option key={agent.id} value={agent.id}>
-                                    {agent.name || "Untitled"}
-                                </option>
-                            ))}
-                        </select>
+                        <div className="flex flex-wrap items-end gap-2 rounded-xl border border-border/70 bg-background/45 p-2.5">
+                            <div className="grid w-fit gap-1.5">
+                                <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                                    Agent
+                                </p>
+                                <div ref={agentDropdownAnchorRef} className="w-fit">
+                                    <AgentDropdownTrigger
+                                        label={
+                                            activeAgent?.name?.trim() ||
+                                            "Select agent"
+                                        }
+                                        isOpen={isAgentDropdownOpen}
+                                        onToggle={() =>
+                                            setIsAgentDropdownOpen((open) =>
+                                                !open,
+                                            )
+                                        }
+                                        ariaLabel="Choose agent"
+                                        className="h-11 min-w-44 max-w-[30ch] bg-background px-3"
+                                    />
+                                    <AgentDropdownMenu
+                                        agents={agents}
+                                        anchorRef={agentDropdownAnchorRef}
+                                        boundaryRef={assistantBoundaryRef}
+                                        selectedAgentId={
+                                            selectedAgentId ?? activeAgent?.id
+                                        }
+                                        isOpen={isAgentDropdownOpen}
+                                        onSelectAgent={handleSelectAgent}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="ml-auto inline-flex items-center gap-2">
+                                <Button
+                                    variant="ghost"
+                                    className="h-11 rounded-lg px-4"
+                                    onClick={openStudio}
+                                >
+                                    Manage Agents
+                                </Button>
+
+                                <Button
+                                    variant="primary"
+                                    type="submit"
+                                    disabled={isSending || !promptText.trim()}
+                                    className="h-11 rounded-lg px-5"
+                                >
+                                    {isSending ? "Sending..." : "Send Prompt"}
+                                </Button>
+                            </div>
+                        </div>
 
                         <label
                             htmlFor="assistant-prompt-input"
@@ -256,44 +355,34 @@ export function AssistantPage({
                         </label>
                         <textarea
                             id="assistant-prompt-input"
-                            className={`${controlClass} min-h-36 resize-y leading-relaxed`}
+                            className={`${controlClass} min-h-28 max-h-64 resize-y rounded-2xl border-border/75 bg-background/75 leading-relaxed`}
                             value={promptText}
                             onChange={(event) =>
                                 onPromptChange(event.target.value)
                             }
                             placeholder="Describe what you want this assistant to do..."
                         />
-
-                        <div className="flex flex-wrap items-center gap-2">
-                            <Button
-                                variant="primary"
-                                type="submit"
-                                disabled={isSending || !promptText.trim()}
-                            >
-                                {isSending ? "Sending..." : "Send Prompt"}
-                            </Button>
-                            {errorDetails ? (
-                                <Button
-                                    variant="ghost"
-                                    danger
-                                    onClick={onClearErrorDetails}
-                                >
-                                    Dismiss Error
-                                </Button>
-                            ) : null}
-                        </div>
                     </form>
 
                     {errorDetails ? (
-                        <div className="rounded-xl border border-rose-400/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-700 dark:text-rose-200">
-                            {errorDetails}
+                        <div className="flex flex-wrap items-center gap-2">
+                            <div className="grow rounded-xl border border-rose-400/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-700 dark:text-rose-200">
+                                {errorDetails}
+                            </div>
+                            <Button
+                                variant="ghost"
+                                danger
+                                onClick={onClearErrorDetails}
+                            >
+                                Dismiss Error
+                            </Button>
                         </div>
                     ) : null}
                 </Card>
 
-                <Card className="min-h-55">
+                <Card className="min-h-0 flex-1 gap-3 p-4">
                     <div className="flex items-center justify-between gap-2">
-                        <h3 className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                        <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                             Latest Response
                         </h3>
                         <span className="text-xs text-muted-foreground">
@@ -302,53 +391,85 @@ export function AssistantPage({
                     </div>
 
                     {hasResponse ? (
-                        <pre className="custom-scrollbar m-0 min-h-35 max-h-[52vh] overflow-auto overscroll-contain rounded-xl border border-border/70 bg-background/65 p-3 text-sm leading-relaxed text-foreground whitespace-pre-wrap wrap-break-word">
+                        <pre className="custom-scrollbar m-0 h-full min-h-0 overflow-auto overscroll-contain rounded-xl border border-border/70 bg-background/65 p-3.5 text-sm leading-relaxed text-foreground whitespace-pre-wrap wrap-break-word">
                             {responseText}
                         </pre>
                     ) : (
-                        <div className="grid min-h-35 place-content-center rounded-xl border border-dashed border-border/70 bg-background/45 p-4 text-center text-sm text-muted-foreground">
+                        <div className="grid h-full min-h-0 place-content-center rounded-xl border border-dashed border-border/70 bg-background/45 p-4 text-center text-sm text-muted-foreground">
                             Send a prompt to see the assistant output here.
                         </div>
                     )}
                 </Card>
             </section>
 
-            <aside className="flex flex-col gap-4">
-                <Card>
-                    <div className="flex items-center justify-between gap-3">
-                        <div>
-                            <h2 className="text-lg font-semibold tracking-tight">
-                                Agent Studio
-                            </h2>
-                            <p className="text-xs text-muted-foreground">
-                                Create, edit, and delete assistant profiles.
-                            </p>
-                        </div>
-                        <Button
-                            variant="primary"
-                            disabled={!canCreate}
-                            onClick={handleOpenCreateDialog}
-                        >
-                            New Agent
-                        </Button>
-                    </div>
+            {isStudioVisible ? (
+                <div
+                    className={`fixed inset-x-0 bottom-0 top-10 z-40 flex justify-end overflow-hidden transition-opacity duration-200 ${
+                        isStudioExpanded ? "bg-black/35 opacity-100" : "bg-black/0 opacity-0"
+                    } backdrop-blur-sm`}
+                >
+                    <Button
+                        variant="unstyled"
+                        className="absolute inset-0"
+                        aria-label="Close agent studio"
+                        onClick={closeStudio}
+                    />
 
-                    <ul className="flex flex-col gap-2">
-                        {agents.map((agent) => (
-                            <AssistantAccordionItem
-                                key={agent.id}
-                                agent={agent}
-                                isOpen={openAssistantId === agent.id}
-                                canDelete={canDelete}
-                                onToggle={handleToggleAgent}
-                                onUpdateName={handleUpdateName}
-                                onUpdatePrompt={handleUpdatePrompt}
-                                onDelete={handleDeleteAgent}
-                            />
-                        ))}
-                    </ul>
-                </Card>
-            </aside>
+                    <aside
+                        className={`custom-scrollbar relative z-10 flex h-full w-full max-w-3xl flex-col gap-3 overflow-y-auto border-l border-border/80 bg-card/95 p-4 shadow-2xl backdrop-blur-xl transition-transform duration-200 ease-out ${
+                            isStudioExpanded ? "translate-x-0" : "translate-x-full"
+                        }`}
+                    >
+                        <div className="flex items-start justify-between gap-3">
+                            <div>
+                                <h2 className="text-xl font-semibold tracking-tight">
+                                    Agent Studio
+                                </h2>
+                                <p className="text-sm text-muted-foreground">
+                                    Create, edit, and organize your assistants.
+                                </p>
+                            </div>
+
+                            <Button
+                                variant="unstyled"
+                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+                                aria-label="Close agent studio"
+                                onClick={closeStudio}
+                            >
+                                <SettingsIcon className="h-5 w-5" />
+                            </Button>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3 rounded-xl border border-border/75 bg-background/70 p-3">
+                            <p className="text-sm text-muted-foreground">
+                                {agents.length} total agents
+                            </p>
+                            <Button
+                                variant="primary"
+                                disabled={!canCreate}
+                                onClick={handleOpenCreateDialog}
+                            >
+                                New Agent
+                            </Button>
+                        </div>
+
+                        <ul className="flex min-h-0 flex-col gap-2">
+                            {agents.map((agent) => (
+                                <AssistantAccordionItem
+                                    key={agent.id}
+                                    agent={agent}
+                                    isOpen={openAssistantId === agent.id}
+                                    canDelete={canDelete}
+                                    onToggle={handleToggleAgent}
+                                    onUpdateName={handleUpdateName}
+                                    onUpdatePrompt={handleUpdatePrompt}
+                                    onDelete={handleDeleteAgent}
+                                />
+                            ))}
+                        </ul>
+                    </aside>
+                </div>
+            ) : null}
 
             {isCreateDialogOpen ? (
                 <div className="fixed inset-0 z-50 grid place-content-center overflow-hidden bg-black/60 p-3 backdrop-blur-sm">

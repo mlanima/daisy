@@ -5,27 +5,29 @@ import {
     type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
-import type { Agent } from "../../../../shared/types/appState";
-import { Button } from "../../../../shared/components";
+import type { Agent } from "../../../shared/types/appState";
+import { Button } from "../../../shared/components";
 
-interface QuickOverflowMenuProps {
+interface AgentDropdownMenuProps {
     agents: Agent[];
     anchorRef: RefObject<HTMLElement | null>;
-    boundaryRef: RefObject<HTMLElement | null>;
+    boundaryRef?: RefObject<HTMLElement | null>;
     selectedAgentId: string | null;
     isOpen: boolean;
     onSelectAgent: (agentId: string) => void;
+    ariaLabel?: string;
 }
 
-/** Overlay dropdown menu for selecting any available quick agent. */
-export function QuickOverflowMenu({
+/** Shared overlay dropdown menu for selecting any available agent. */
+export function AgentDropdownMenu({
     agents,
     anchorRef,
     boundaryRef,
     selectedAgentId,
     isOpen,
     onSelectAgent,
-}: Readonly<QuickOverflowMenuProps>) {
+    ariaLabel = "Select agent",
+}: Readonly<AgentDropdownMenuProps>) {
     const [position, setPosition] = useState<{
         top: number;
         left: number;
@@ -48,7 +50,7 @@ export function QuickOverflowMenu({
 
             const rect = anchor.getBoundingClientRect();
             const boundary =
-                boundaryRef.current?.getBoundingClientRect() ?? null;
+                boundaryRef?.current?.getBoundingClientRect() ?? null;
             const viewportWidth = globalThis.innerWidth;
             const viewportHeight = globalThis.innerHeight;
             const edgePadding = 8;
@@ -115,11 +117,7 @@ export function QuickOverflowMenu({
         };
     }, [anchorRef, boundaryRef, isOpen]);
 
-    if (!isOpen || agents.length === 0) {
-        return null;
-    }
-
-    if (!position) {
+    if (!isOpen || agents.length === 0 || !position) {
         return null;
     }
 
@@ -136,7 +134,7 @@ export function QuickOverflowMenu({
         <div
             className="custom-scrollbar flex flex-col gap-1 overflow-y-auto overflow-x-hidden rounded-xl border border-primary/45 bg-background p-1.5 shadow-[0_22px_36px_-18px_hsl(var(--foreground))]"
             role="menu"
-            aria-label="Select agent"
+            aria-label={ariaLabel}
             style={menuStyle}
         >
             {agents.map((agent) => (

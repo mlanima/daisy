@@ -108,8 +108,33 @@ export function useQuickAssistantShell({
                     4,
                 360,
             );
+            const promptElement = promptRef.current;
+            const responseElement = shell.querySelector<HTMLElement>(
+                ".quick-response",
+            );
+            const shellOverflow = Math.max(
+                shell.scrollHeight - shell.clientHeight,
+                0,
+            );
+            const promptOverflow = promptElement
+                ? Math.max(
+                      promptElement.scrollHeight - promptElement.clientHeight,
+                      0,
+                  )
+                : 0;
+            const responseOverflow = responseElement
+                ? Math.max(
+                      responseElement.scrollHeight - responseElement.clientHeight,
+                      0,
+                  )
+                : 0;
+            const extraOverflowHeight = Math.max(
+                shellOverflow,
+                promptOverflow,
+                responseOverflow,
+            );
             const rawHeight = Math.max(
-                Math.ceil(shell.scrollHeight + bodyPaddingY) + 4,
+                measuredHeight + Math.ceil(extraOverflowHeight),
                 72,
             );
             const lastSize = lastSizeRef.current;
@@ -191,7 +216,7 @@ export function useQuickAssistantShell({
         return () => {
             cancelAnimationFrame(frame);
         };
-    }, [forceSplit, isOverflowOpen, responseText, isSending, windowSize]);
+    }, [forceSplit, isConstrained, isOverflowOpen, responseText, isSending, windowSize]);
 
     useEffect(() => {
         return bindQuickWindowLifecycle(() => {
