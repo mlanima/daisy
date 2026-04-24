@@ -3,6 +3,7 @@ import { Settings as SettingsIcon } from "lucide-react";
 import { Button, StatusBanner } from "../shared/components";
 import { useAppControllerStore } from "./appControllerStore";
 import { useAppController } from "./useAppController";
+import { MainWindowTitleBar } from "./components/MainWindowTitleBar";
 import { MainAssistantView } from "./views/MainAssistantView";
 import { QuickAssistantView } from "./views/QuickAssistantView";
 import { SettingsView } from "./views/SettingsView";
@@ -62,11 +63,14 @@ function AppContent() {
     }
 
     return (
-        <div className="relative h-full w-full overflow-x-hidden">
-            <div className="pointer-events-none absolute inset-x-0 -top-18 z-0 mx-auto h-64 max-w-5xl rounded-full bg-primary/20 blur-3xl" />
-            <div className="pointer-events-none absolute -right-8 top-10 z-0 h-44 w-44 rounded-full bg-emerald-400/20 blur-2xl" />
+        <div className="relative flex h-full w-full flex-col overflow-hidden">
+            <MainWindowTitleBar />
 
-            <main className="custom-scrollbar relative z-10 flex h-full w-full flex-col gap-5 overflow-y-auto overflow-x-hidden p-3">
+            <div className="relative min-h-0 w-full flex-1 overflow-x-hidden">
+                <div className="pointer-events-none absolute inset-x-0 -top-18 z-0 mx-auto h-64 max-w-5xl rounded-full bg-primary/20 blur-3xl" />
+                <div className="pointer-events-none absolute -right-8 top-10 z-0 h-44 w-44 rounded-full bg-emerald-400/20 blur-2xl" />
+
+                <main className="custom-scrollbar relative z-10 flex h-full w-full flex-col gap-5 overflow-y-auto overflow-x-hidden p-3">
                 {view === "assistant" ? (
                     <header className="rounded-3xl border border-border/75 bg-card/80 p-5 shadow-[0_24px_64px_-36px_hsl(var(--foreground))] backdrop-blur-xl">
                         <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
@@ -112,7 +116,8 @@ function AppContent() {
                 ) : (
                     <SettingsView />
                 )}
-            </main>
+                </main>
+            </div>
         </div>
     );
 }

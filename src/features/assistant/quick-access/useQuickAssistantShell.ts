@@ -191,13 +191,7 @@ export function useQuickAssistantShell({
         return () => {
             cancelAnimationFrame(frame);
         };
-    }, [
-        forceSplit,
-        isOverflowOpen,
-        responseText,
-        isSending,
-        windowSize,
-    ]);
+    }, [forceSplit, isOverflowOpen, responseText, isSending, windowSize]);
 
     useEffect(() => {
         return bindQuickWindowLifecycle(() => {
