@@ -1,29 +1,18 @@
+import { useCallback } from "react";
 import { QuickAssistantPage } from "../../features/assistant";
-import { useAppControllerStore } from "../appControllerStore";
+import { useSnapshot, usePromptFlow } from "../../store/appStore";
+import { useAssistantActions } from "../../features/assistant/useAssistantActions";
+import { openMainAssistantWindow } from "../../features/assistant/assistantService";
+import { useUiFeedback } from "../../store/appStore";
 
 /** Renders the compact quick-assistant surface used in popup mode. */
 export function QuickAssistantView() {
-    const controller = useAppControllerStore((state) => state.controller);
-
-    if (!controller) {
-        return (
-            <main className="grid min-h-18 place-content-center px-3 py-2 text-center text-sm text-muted-foreground">
-                Loading quick assistant...
-            </main>
-        );
-    }
-
-    const {
-        snapshot,
-        promptText,
-        responseText,
-        isSending,
-        refreshQuickCapture,
-        setPromptText,
-        sendCurrentPrompt,
-        onSelectAgent,
-        onOpenFullApp,
-    } = controller;
+    const snapshot = useSnapshot();
+    const { promptText, responseText, isSending, setPromptText } = usePromptFlow();
+    const { setError } = useUiFeedback();
+    const { refreshQuickCapture, sendCurrentPrompt, selectAgent } = useAssistantActions({
+        isQuickWindow: true,
+    });
 
     if (!snapshot) {
         return (
@@ -32,6 +21,18 @@ export function QuickAssistantView() {
             </main>
         );
     }
+
+    const handleSend = useCallback(() => {
+        void sendCurrentPrompt();
+    }, [sendCurrentPrompt]);
+
+    const handleOpenFullApp = useCallback(async () => {
+        try {
+            await openMainAssistantWindow();
+        } catch (error) {
+            setError(error, "Failed to open main window");
+        }
+    }, [setError]);
 
     return (
         <QuickAssistantPage
@@ -42,15 +43,11 @@ export function QuickAssistantView() {
             responseText={responseText}
             isSending={isSending}
             windowSize={snapshot.settings.windowSize}
-            onSelectAgent={onSelectAgent}
+            onSelectAgent={selectAgent}
             onPromptChange={setPromptText}
             onRefreshCapture={refreshQuickCapture}
-            onSend={() => {
-                void sendCurrentPrompt();
-            }}
-            onOpenFullApp={() => {
-                void onOpenFullApp();
-            }}
+            onSend={handleSend}
+            onOpenFullApp={handleOpenFullApp}
         />
     );
 }

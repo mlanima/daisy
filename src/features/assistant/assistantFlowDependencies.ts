@@ -11,6 +11,7 @@ import {
     subscribeClipboardCaptured,
     type QuickCaptureData,
 } from "./assistantService";
+import { persistWorkspaceSnapshot } from "../../app/services/workspaceService";
 
 export interface AssistantFlowDependencies {
     fetchQuickCaptureData: () => Promise<QuickCaptureData>;
@@ -22,6 +23,7 @@ export interface AssistantFlowDependencies {
         handler: (payload: ClipboardCapturedEvent) => void,
     ) => Promise<() => void>;
     resolveSelectedAgent: (snapshot: AppStateSnapshot | null) => Agent | null;
+    persistSnapshot: (snapshot: AppStateSnapshot) => Promise<AppStateSnapshot>;
 }
 
 export const defaultAssistantFlowDependencies: AssistantFlowDependencies = {
@@ -29,4 +31,5 @@ export const defaultAssistantFlowDependencies: AssistantFlowDependencies = {
     streamAgentResponse,
     subscribeClipboardCaptured,
     resolveSelectedAgent,
+    persistSnapshot: persistWorkspaceSnapshot,
 };

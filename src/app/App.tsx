@@ -1,39 +1,131 @@
 import { useEffect } from "react";
 import { Settings as SettingsIcon } from "lucide-react";
 import { Button } from "../shared/components";
-import { useAppControllerStore } from "./appControllerStore";
-import { useAppController } from "./useAppController";
+import { useAppStore, useSnapshot, useNavigation, useBootstrapState } from "../store/appStore";
 import { MainWindowTitleBar } from "./components/MainWindowTitleBar";
 import { MainAssistantView } from "./views/MainAssistantView";
 import { QuickAssistantView } from "./views/QuickAssistantView";
 import { SettingsView } from "./views/SettingsView";
+import { bootstrapWorkspace, persistWorkspaceSnapshot } from "./services/workspaceService";
 import "./styles/app.css";
 
 /**
- * Renders the top-level shell once the app controller is available.
+ * Initializes app state by bootstrapping workspace and setting up DOM attributes.
+ */
+function useAppInitialization() {
+    const { isBootstrapping, completeBootstrap } = useBootstrapState();
+    const { initializeApp, setSnapshot, setError, clearStatus } = useAppStore((state) => ({
+        initializeApp: state.initializeApp,
+        setSnapshot: state.setSnapshot,
+        setError: state.setError,
+        clearStatus: state.clearStatus,
+    }));
+
+    const snapshot = useSnapshot();
+
+    // Initialize app on mount
+    useEffect(() => {
+        if (!isBootstrapping) {
+            return;
+        }
+
+        let mounted = true;
+
+        const bootstrap = async () => {
+            try {
+                const { snapshot: initialSnapshot, apiKeyPresent } =
+                    await bootstrapWorkspace();
+
+                if (!mounted) {
+                    return;
+                }
+
+                initializeApp(initialSnapshot, apiKeyPresent);
+                clearStatus();
+            } catch (error) {
+                if (mounted) {
+                    setError(error, "Failed to bootstrap app");
+                }
+            } finally {
+                if (mounted) {
+                    completeBootstrap();
+                }
+            }
+        };
+
+        void bootstrap();
+
+        return () => {
+            mounted = false;
+        };
+    }, [isBootstrapping, initializeApp, setError, clearStatus, completeBootstrap]);
+
+    // Repair selected agent reference if needed
+    useEffect(() => {
+        if (!snapshot) {
+            return;
+        }
+
+        if (snapshot.agents.length === 0) {
+            if (snapshot.selectedAgentId === null) {
+                return;
+            }
+
+            const fixed = { ...snapshot, selectedAgentId: null };
+            setSnapshot(fixed);
+            void persistWorkspaceSnapshot(fixed);
+            return;
+        }
+
+        const isValid = snapshot.agents.some(
+            (agent) => agent.id === snapshot.selectedAgentId,
+        );
+
+        if (isValid) {
+            return;
+        }
+
+        const fixed = {
+            ...snapshot,
+            selectedAgentId: snapshot.agents[0]?.id ?? null,
+        };
+
+        setSnapshot(fixed);
+        void persistWorkspaceSnapshot(fixed);
+    }, [snapshot, setSnapshot]);
+
+    // Apply UI shell styling
+    useEffect(() => {
+        if (!snapshot) {
+            return;
+        }
+
+        document.documentElement.dataset.theme = snapshot.settings.darkMode
+            ? "dark"
+            : "light";
+
+        document.documentElement.dataset.windowSize =
+            snapshot.settings.windowSize;
+    }, [snapshot]);
+}
+
+/**
+ * Renders the main app content once initialized.
  */
 function AppContent() {
-    const controller = useAppControllerStore((state) => state.controller);
+    const { isBootstrapping } = useBootstrapState();
+    const { view, setView } = useNavigation();
+    const snapshot = useSnapshot();
+    const isQuickWindow = useAppStore((state) => state.isQuickWindow);
+    const { status } = useAppStore((state) => ({
+        status: state.status,
+    }));
 
-    if (!controller) {
-        return (
-            <main className="grid min-h-[68vh] place-content-center gap-2 text-center">
-                <h1 className="text-xl font-semibold tracking-tight">
-                    Launching Assistant...
-                </h1>
-            </main>
-        );
-    }
-
-    const {
-        view,
-        setView,
-        isQuickWindow,
-        selectedAgent,
-        snapshot,
-        isBootstrapping,
-        status,
-    } = controller;
+    // Derive selected agent from snapshot
+    const selectedAgent =
+        snapshot?.agents.find(
+            (agent) => agent.id === snapshot.selectedAgentId,
+        ) ?? null;
 
     if (isBootstrapping) {
         return (
@@ -116,16 +208,10 @@ function AppContent() {
 }
 
 /**
- * Bootstraps the app controller and exposes it through the zustand store.
+ * Main app component that initializes and renders the UI.
  */
 function App() {
-    const controller = useAppController();
-    const setController = useAppControllerStore((state) => state.setController);
-
-    useEffect(() => {
-        setController(controller);
-    }, [controller, setController]);
-
+    useAppInitialization();
     return <AppContent />;
 }
 
