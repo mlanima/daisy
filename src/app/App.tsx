@@ -71,42 +71,44 @@ function AppContent() {
                 <div className="pointer-events-none absolute -right-8 top-10 z-0 h-44 w-44 rounded-full bg-emerald-400/20 blur-2xl" />
 
                 <main className="custom-scrollbar relative z-10 flex h-full w-full flex-col gap-3 overflow-y-auto overflow-x-hidden p-3">
-                {view === "assistant" ? (
-                    <header className="rounded-xl border border-border/75 bg-card/80 p-3 shadow-sm backdrop-blur-xl">
-                        <div className="flex items-center justify-between gap-3">
-                            <div className="flex min-w-0 items-center gap-2.5">
-                                <span
-                                    aria-hidden="true"
-                                    className="app-brand-logo"
-                                />
-                                <div className="min-w-0">
-                                    <h1 className="truncate text-lg font-semibold tracking-tight text-foreground">
-                                        AIDS Assistant
-                                    </h1>
-                                    <p className="truncate text-sm text-muted-foreground">
-                                        Prompt in, response out.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <Button
-                                variant="unstyled"
-                                className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
-                                aria-label="Open settings"
-                                onClick={() => setView("settings")}
-                            >
-                                <SettingsIcon className="h-5 w-5" />
-                            </Button>
-                        </div>
-                    </header>
-                ) : null}
-                <div className={view === "assistant" ? "min-h-0 flex-1" : ""}>
                     {view === "assistant" ? (
-                        <MainAssistantView />
-                    ) : (
-                        <SettingsView />
-                    )}
-                </div>
+                        <header className="rounded-xl border border-border/75 bg-card/80 p-3 shadow-sm backdrop-blur-xl">
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="flex min-w-0 items-center gap-2.5">
+                                    <span
+                                        aria-hidden="true"
+                                        className="app-brand-logo"
+                                    />
+                                    <div className="min-w-0">
+                                        <h1 className="truncate text-lg font-semibold tracking-tight text-foreground">
+                                            AIDS Assistant
+                                        </h1>
+                                        <p className="truncate text-sm text-muted-foreground">
+                                            Prompt in, response out.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <Button
+                                    variant="unstyled"
+                                    className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+                                    aria-label="Open settings"
+                                    onClick={() => setView("settings")}
+                                >
+                                    <SettingsIcon className="h-5 w-5" />
+                                </Button>
+                            </div>
+                        </header>
+                    ) : null}
+                    <div
+                        className={view === "assistant" ? "min-h-0 flex-1" : ""}
+                    >
+                        {view === "assistant" ? (
+                            <MainAssistantView />
+                        ) : (
+                            <SettingsView />
+                        )}
+                    </div>
                 </main>
             </div>
         </div>
