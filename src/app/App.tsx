@@ -7,7 +7,7 @@ import { MainAssistantView } from "./views/MainAssistantView";
 import { QuickAssistantView } from "./views/QuickAssistantView";
 import { SettingsView } from "./views/SettingsView";
 import { bootstrapWorkspace, persistWorkspaceSnapshot } from "./services/workspaceService";
-import "./styles/app.css";
+import "./styles/app-minimal.css";
 
 /**
  * Initializes app state by bootstrapping workspace and setting up DOM attributes.
