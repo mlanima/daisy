@@ -1,44 +1,73 @@
 @import "tailwindcss";
 
+@theme {
+    --color-background: hsl(var(--background));
+    --color-foreground: hsl(var(--foreground));
+    --color-card: hsl(var(--card));
+    --color-card-foreground: hsl(var(--card-foreground));
+    --color-primary: hsl(var(--primary));
+    --color-primary-foreground: hsl(var(--primary-foreground));
+    --color-secondary: hsl(var(--secondary));
+    --color-secondary-foreground: hsl(var(--secondary-foreground));
+    --color-muted: hsl(var(--muted));
+    --color-muted-foreground: hsl(var(--muted-foreground));
+    --color-accent: hsl(var(--accent));
+    --color-accent-foreground: hsl(var(--accent-foreground));
+    --color-border: hsl(var(--border));
+    --color-input: hsl(var(--input));
+    --color-ring: hsl(var(--ring));
+
+    --font-sans: "Sora", "Segoe UI Variable", "Trebuchet MS", sans-serif;
+    --font-mono: "IBM Plex Mono", "Consolas", monospace;
+
+    --text-base: var(--app-font-size);
+
+    --animate-shell-enter: shell-enter 0.3s ease-out;
+
+    --width-quick-shell: var(--quick-shell-width);
+    --min-width-quick-shell: var(--quick-shell-min-width);
+    --max-width-quick-shell: var(--quick-shell-width);
+}
+
 @layer base {
     :root {
         --app-font-size: 16px;
         --quick-font-size: 13px;
         --quick-shell-width: 492px;
         --quick-shell-min-width: 492px;
-        --background: 0 0% 100%;
-        --foreground: 240 10% 3.9%;
+        --background: 220 20% 98%;
+        --foreground: 222 22% 14%;
         --card: 0 0% 100%;
-        --card-foreground: 240 10% 3.9%;
-        --primary: 142.1 76.2% 36.3%;
-        --primary-foreground: 355.7 100% 97.3%;
-        --secondary: 240 4.8% 95.9%;
-        --secondary-foreground: 240 5.9% 10%;
-        --muted: 240 4.8% 95.9%;
-        --muted-foreground: 240 3.8% 46.1%;
-        --accent: 240 4.8% 95.9%;
-        --accent-foreground: 240 5.9% 10%;
-        --border: 240 5.9% 90%;
-        --input: 240 5.9% 90%;
-        --ring: 142.1 76.2% 36.3%;
+        --card-foreground: 222 22% 14%;
+        --primary: 142 72% 34%;
+        --primary-foreground: 210 40% 98%;
+        --secondary: 214 28% 95%;
+        --secondary-foreground: 222 22% 16%;
+        --muted: 214 28% 95%;
+        --muted-foreground: 215 12% 45%;
+        --accent: 145 45% 94%;
+        --accent-foreground: 142 72% 26%;
+        --border: 214 22% 88%;
+        --input: 214 22% 88%;
+        --ring: 142 72% 34%;
     }
 
     :root[data-theme="dark"] {
-        --background: 240 10% 3.9%;
-        --foreground: 0 0% 98%;
-        --card: 240 10% 3.9%;
-        --card-foreground: 0 0% 98%;
-        --primary: 142.1 70.6% 45.3%;
-        --primary-foreground: 144.9 80.4% 10%;
-        --secondary: 240 3.7% 15.9%;
-        --secondary-foreground: 0 0% 98%;
-        --muted: 240 3.7% 15.9%;
-        --muted-foreground: 240 5% 64.9%;
-        --accent: 240 3.7% 15.9%;
-        --accent-foreground: 0 0% 98%;
-        --border: 240 3.7% 15.9%;
-        --input: 240 3.7% 15.9%;
-        --ring: 142.1 70.6% 45.3%;
+        --background: 223 29% 8%;
+        --foreground: 210 40% 96%;
+        --card: 223 28% 10%;
+        --card-foreground: 210 40% 96%;
+        --primary: 142 68% 45%;
+        --primary-foreground: 223 28% 10%;
+        --secondary: 224 18% 15%;
+        --secondary-foreground: 210 40% 96%;
+        --muted: 224 18% 15%;
+        --muted-foreground: 215 16% 67%;
+        --accent: 142 34% 16%;
+        --accent-foreground: 145 100% 96%;
+        --border: 223 18% 21%;
+        --input: 223 18% 21%;
+        --ring: 142 68% 45%;
     }
 
     :root[data-window-size="small"] {
@@ -76,16 +105,22 @@
         min-height: 100vh;
         overflow: hidden;
         padding: 0;
+        background-attachment: fixed;
         background-image:
             radial-gradient(
-                circle at 12% 0%,
-                hsl(var(--primary) / 0.16),
-                transparent 42%
+                circle at 14% 14%,
+                hsl(var(--primary) / 0.14),
+                transparent 28%
             ),
             radial-gradient(
-                circle at 88% 18%,
-                hsl(var(--primary) / 0.1),
-                transparent 34%
+                circle at 86% 12%,
+                hsl(var(--primary) / 0.08),
+                transparent 24%
+            ),
+            radial-gradient(
+                circle at 50% 100%,
+                hsl(var(--primary) / 0.05),
+                transparent 42%
             ),
             linear-gradient(
                 180deg,
@@ -131,7 +166,7 @@
 
     code {
         border: 1px solid hsl(var(--border));
-        border-radius: 0.5rem;
+        border-radius: 0.6rem;
         padding: 2px 6px;
         background: hsl(var(--background) / 0.78);
         font-family: "IBM Plex Mono", "Consolas", monospace;
@@ -173,7 +208,7 @@
 /* Reusable custom scrollbar style */
 .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--muted-foreground) / 0.42) transparent;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.4) transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -187,13 +222,13 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.36);
+    background: hsl(var(--muted-foreground) / 0.34);
     border-radius: 999px;
-    border: 1px solid hsl(var(--background) / 0.7);
+    border: 1px solid hsl(var(--background) / 0.72);
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.5);
+    background: hsl(var(--muted-foreground) / 0.48);
 }
 
 /* Quick window layout constraints (complex runtime behavior) */

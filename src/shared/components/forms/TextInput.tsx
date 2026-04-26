@@ -10,7 +10,7 @@ export interface TextInputProps extends Omit<
 }
 
 const inputClass =
-    "w-full rounded-xl border border-input/85 bg-background/70 px-3 py-2.5 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55 disabled:cursor-not-allowed disabled:opacity-50";
+    "w-full rounded-xl border border-input/85 bg-card/60 px-3 py-2.5 text-sm shadow-sm transition-all placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50";
 
 /** Standard text input field with optional label, error, and helper text. */
 export function TextInput({
