@@ -23,7 +23,7 @@ export function CreateAgentDialog({
     const canSubmit = name.trim().length > 0 || systemPrompt.trim().length > 0;
 
     const handleSubmit = useCallback(
-        (event: React.FormEvent<HTMLFormElement>) => {
+        (event: React.SyntheticEvent<HTMLFormElement>) => {
             event.preventDefault();
             if (canSubmit) {
                 onCreate(name, systemPrompt);

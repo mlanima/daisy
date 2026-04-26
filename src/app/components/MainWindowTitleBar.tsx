@@ -2,7 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Maximize2, Minimize2, Minus, X } from "lucide-react";
 
-const appWindow = getCurrentWindow();
+/** Lazily get the app window instance with error handling */
+function getAppWindow() {
+    try {
+        return getCurrentWindow();
+    } catch {
+        return null;
+    }
+}
 
 /** Styled custom title bar for the main desktop window. */
 export function MainWindowTitleBar() {
@@ -10,6 +17,8 @@ export function MainWindowTitleBar() {
 
     const refreshMaximizedState = useCallback(async () => {
         try {
+            const appWindow = getAppWindow();
+            if (!appWindow) return;
             const maximized = await appWindow.isMaximized();
             setIsMaximized(maximized);
         } catch {
@@ -31,21 +40,24 @@ export function MainWindowTitleBar() {
 
         void syncIfMounted();
 
-        void appWindow
-            .onResized(() => {
-                void syncIfMounted();
-            })
-            .then((unlisten) => {
-                if (!isMounted) {
-                    unlisten();
-                    return;
-                }
+        const appWindow = getAppWindow();
+        if (appWindow) {
+            void appWindow
+                .onResized(() => {
+                    void syncIfMounted();
+                })
+                .then((unlisten) => {
+                    if (!isMounted) {
+                        unlisten();
+                        return;
+                    }
 
-                unlistenResize = unlisten;
-            })
-            .catch(() => {
-                // Ignore resize listener errors; controls still work without state sync.
-            });
+                    unlistenResize = unlisten;
+                })
+                .catch(() => {
+                    // Ignore resize listener errors; controls still work without state sync.
+                });
+        }
 
         return () => {
             isMounted = false;
@@ -54,12 +66,16 @@ export function MainWindowTitleBar() {
     }, [refreshMaximizedState]);
 
     const minimizeWindow = useCallback(() => {
+        const appWindow = getAppWindow();
+        if (!appWindow) return;
         void appWindow.minimize().catch(() => {
             // Ignore minimize failures silently.
         });
     }, []);
 
     const toggleMaximizeWindow = useCallback(() => {
+        const appWindow = getAppWindow();
+        if (!appWindow) return;
         void appWindow
             .toggleMaximize()
             .then(() => refreshMaximizedState())
@@ -69,6 +85,8 @@ export function MainWindowTitleBar() {
     }, [refreshMaximizedState]);
 
     const closeWindow = useCallback(() => {
+        const appWindow = getAppWindow();
+        if (!appWindow) return;
         void appWindow.close().catch(() => {
             // Ignore close failures silently.
         });

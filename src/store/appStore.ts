@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import type { AppStateSnapshot } from "../shared/types/appState";
 import type { UiStatus, StatusTone } from "../shared/types/feedback";
@@ -82,7 +83,14 @@ function createErrorPresenter(): ErrorPresenter {
             if (!error) {
                 return "An unexpected error occurred";
             }
-            return String(error);
+            if (typeof error === "string") {
+                return error;
+            }
+            try {
+                return JSON.stringify(error);
+            } catch {
+                return "An unexpected error occurred";
+            }
         },
         getDetails(error: unknown): string {
             if (error instanceof Error) {
@@ -192,23 +200,29 @@ export function useSnapshot() {
 
 /** Hook to get prompt-related state. */
 export function usePromptFlow() {
-    return useAppStore((state) => ({
-        promptText: state.promptText,
-        sourceText: state.sourceText,
-        responseText: state.responseText,
-        isSending: state.isSending,
-        setPromptText: state.setPromptText,
-        setSourceText: state.setSourceText,
-        setResponseText: state.setResponseText,
-        setIsSending: state.setIsSending,
-        applyCapturedText: state.applyCapturedText,
-        clearResponse: state.clearResponse,
-    }));
+    return useAppStore(
+        useShallow((state) => ({
+            promptText: state.promptText,
+            sourceText: state.sourceText,
+            responseText: state.responseText,
+            isSending: state.isSending,
+            setPromptText: state.setPromptText,
+            setSourceText: state.setSourceText,
+            setResponseText: state.setResponseText,
+            setIsSending: state.setIsSending,
+            applyCapturedText: state.applyCapturedText,
+            clearResponse: state.clearResponse,
+        })),
+    );
 }
 
 /** Hook to get assistant agent info. */
 export function useSelectedAgent() {
     const snapshot = useAppStore((state) => state.snapshot);
+    if (!snapshot) {
+        return null;
+    }
+
     return (
         snapshot?.agents.find(
             (agent) => agent.id === snapshot.selectedAgentId,
@@ -223,38 +237,46 @@ export function useAgents() {
 
 /** Hook to get UI feedback state. */
 export function useUiFeedback() {
-    return useAppStore((state) => ({
-        status: state.status,
-        lastErrorDetails: state.lastErrorDetails,
-        setStatus: state.setStatus,
-        setError: state.setError,
-        clearErrorDetails: state.clearErrorDetails,
-        clearStatus: state.clearStatus,
-    }));
+    return useAppStore(
+        useShallow((state) => ({
+            status: state.status,
+            lastErrorDetails: state.lastErrorDetails,
+            setStatus: state.setStatus,
+            setError: state.setError,
+            clearErrorDetails: state.clearErrorDetails,
+            clearStatus: state.clearStatus,
+        })),
+    );
 }
 
 /** Hook for bootstrap state. */
 export function useBootstrapState() {
-    return useAppStore((state) => ({
-        isBootstrapping: state.isBootstrapping,
-        completeBootstrap: state.completeBootstrap,
-    }));
+    return useAppStore(
+        useShallow((state) => ({
+            isBootstrapping: state.isBootstrapping,
+            completeBootstrap: state.completeBootstrap,
+        })),
+    );
 }
 
 /** Hook for navigation. */
 export function useNavigation() {
-    return useAppStore((state) => ({
-        view: state.view,
-        setView: state.setView,
-    }));
+    return useAppStore(
+        useShallow((state) => ({
+            view: state.view,
+            setView: state.setView,
+        })),
+    );
 }
 
 /** Hook for API key state. */
 export function useApiKeyState() {
-    return useAppStore((state) => ({
-        apiKeyPresent: state.apiKeyPresent,
-        setApiKeyPresent: state.setApiKeyPresent,
-    }));
+    return useAppStore(
+        useShallow((state) => ({
+            apiKeyPresent: state.apiKeyPresent,
+            setApiKeyPresent: state.setApiKeyPresent,
+        })),
+    );
 }
 
 /** Hook for quick window mode. */

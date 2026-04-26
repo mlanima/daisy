@@ -18,6 +18,8 @@ import {
 } from "../../schemas/appStateSchema";
 
 const CLIPBOARD_CAPTURED_EVENT = "clipboard-captured";
+const BROWSER_SNAPSHOT_STORAGE_KEY = "aids.browser.snapshot.v1";
+const BROWSER_API_KEY_STORAGE_KEY = "aids.browser.apiKey.v1";
 
 export interface QuickWindowResizeResult {
     width: number;
@@ -47,9 +49,207 @@ function parsePayload<T>(
     throw new Error(`Invalid payload for ${context}: ${result.error.message}`);
 }
 
+function isTauriRuntimeAvailable(): boolean {
+    if (globalThis.window === undefined) {
+        return false;
+    }
+
+    const internals = (
+        globalThis.window as { __TAURI_INTERNALS__?: { invoke?: unknown } }
+    ).__TAURI_INTERNALS__;
+
+    return typeof internals?.invoke === "function";
+}
+
+function createDefaultSnapshot(): AppStateSnapshot {
+    return {
+        agents: [
+            {
+                id: "translate-ua",
+                name: "Translate",
+                description: "Translate any text to Ukrainian",
+                systemPrompt:
+                    "Translate the user's text to Ukrainian. Keep names and formatting intact.",
+            },
+            {
+                id: "grammar-de",
+                name: "Grammar",
+                description: "Correct German grammar and explain edits",
+                systemPrompt:
+                    "Correct grammar mistakes in German text and briefly explain each correction.",
+            },
+            {
+                id: "explain",
+                name: "Explain",
+                description: "Explain text for a language learner",
+                systemPrompt:
+                    "Explain the user's text for a language learner using simple wording and examples.",
+            },
+        ],
+        selectedAgentId: "translate-ua",
+        settings: {
+            autoSendPrompt: false,
+            darkMode: true,
+            apiBaseUrl: "https://api.openai.com/v1/chat/completions",
+            windowSize: "medium",
+            recentAgentIds: [],
+            model: {
+                model: "gpt-4o-mini",
+                temperature: 0.2,
+                maxTokens: 800,
+            },
+        },
+    };
+}
+
+function getBrowserSnapshot(): AppStateSnapshot {
+    if (typeof localStorage === "undefined") {
+        return createDefaultSnapshot();
+    }
+
+    const rawValue = localStorage.getItem(BROWSER_SNAPSHOT_STORAGE_KEY);
+
+    if (!rawValue) {
+        return createDefaultSnapshot();
+    }
+
+    try {
+        const parsed = JSON.parse(rawValue);
+        return parsePayload(
+            appStateSnapshotSchema,
+            parsed,
+            "browser snapshot storage",
+        );
+    } catch {
+        return createDefaultSnapshot();
+    }
+}
+
+function saveBrowserSnapshot(snapshot: AppStateSnapshot): AppStateSnapshot {
+    if (typeof localStorage !== "undefined") {
+        localStorage.setItem(
+            BROWSER_SNAPSHOT_STORAGE_KEY,
+            JSON.stringify(snapshot),
+        );
+    }
+
+    return snapshot;
+}
+
+function getBrowserApiKey(): string | null {
+    if (typeof localStorage === "undefined") {
+        return null;
+    }
+
+    return localStorage.getItem(BROWSER_API_KEY_STORAGE_KEY);
+}
+
+function saveBrowserApiKey(apiKey: string): void {
+    if (typeof localStorage === "undefined") {
+        return;
+    }
+
+    localStorage.setItem(BROWSER_API_KEY_STORAGE_KEY, apiKey);
+}
+
+function clearBrowserApiKey(): void {
+    if (typeof localStorage === "undefined") {
+        return;
+    }
+
+    localStorage.removeItem(BROWSER_API_KEY_STORAGE_KEY);
+}
+
+function getBrowserApiKeyPreviewValue(): string {
+    const apiKey = getBrowserApiKey();
+
+    if (!apiKey) {
+        return "";
+    }
+
+    if (apiKey.length <= 8) {
+        return "*".repeat(apiKey.length);
+    }
+
+    return `${apiKey.slice(0, 4)}...${apiKey.slice(-4)}`;
+}
+
+function getBrowserCommandFallback(
+    command: string,
+    args?: Record<string, unknown>,
+): unknown {
+    switch (command) {
+        case "get_app_state":
+            return getBrowserSnapshot();
+        case "save_app_state": {
+            const snapshot = parsePayload(
+                appStateSnapshotSchema,
+                args?.snapshot,
+                "save_app_state request",
+            );
+
+            return saveBrowserSnapshot(snapshot);
+        }
+        case "has_api_key":
+            return Boolean(getBrowserApiKey());
+        case "save_api_key": {
+            const apiKey = parsePayload(
+                apiKeySchema,
+                args?.apiKey,
+                "save_api_key request",
+            );
+            saveBrowserApiKey(apiKey);
+            return null;
+        }
+        case "clear_api_key":
+            clearBrowserApiKey();
+            return null;
+        case "get_api_key_preview":
+            return getBrowserApiKeyPreviewValue();
+        case "get_latest_clipboard_capture":
+            return null;
+        case "open_main_window":
+        case "suppress_quick_auto_hide":
+        case "run_agent_stream":
+            return null;
+        case "resize_quick_window":
+            return { width: 0, height: 0, isHeightClamped: false };
+        case "run_agent":
+            throw new Error(
+                "Running agents requires the Tauri backend. Start the app with `pnpm tauri dev`.",
+            );
+        default:
+            throw new Error(
+                `Unsupported command outside Tauri runtime: ${command}`,
+            );
+    }
+}
+
+async function invokeCommand<T>(
+    command: string,
+    args?: Record<string, unknown>,
+): Promise<T> {
+    if (!isTauriRuntimeAvailable()) {
+        return getBrowserCommandFallback(command, args) as T;
+    }
+
+    return invoke(command, args) as Promise<T>;
+}
+
+async function listenEvent<T>(
+    eventName: string,
+    handler: Parameters<typeof listen<T>>[1],
+): Promise<UnlistenFn> {
+    if (!isTauriRuntimeAvailable()) {
+        return () => {};
+    }
+
+    return listen<T>(eventName, handler);
+}
+
 /** Loads full application state snapshot from backend persistence. */
 export async function getAppState(): Promise<AppStateSnapshot> {
-    const payload = await invoke("get_app_state");
+    const payload = await invokeCommand("get_app_state");
     return parsePayload(appStateSnapshotSchema, payload, "get_app_state");
 }
 
@@ -62,7 +262,7 @@ export async function saveAppState(
         snapshot,
         "save_app_state request",
     );
-    const payload = await invoke("save_app_state", {
+    const payload = await invokeCommand("save_app_state", {
         snapshot: validatedSnapshot,
     });
 
@@ -78,7 +278,9 @@ export async function runAgent(
         request,
         "run_agent request",
     );
-    const payload = await invoke("run_agent", { request: validatedRequest });
+    const payload = await invokeCommand("run_agent", {
+        request: validatedRequest,
+    });
 
     return parsePayload(aiRunResponseSchema, payload, "run_agent");
 }
@@ -91,7 +293,7 @@ export async function runAgentStream(request: RunAgentRequest): Promise<void> {
         "run_agent_stream request",
     );
 
-    return invoke("run_agent_stream", { request: validatedRequest });
+    return invokeCommand("run_agent_stream", { request: validatedRequest });
 }
 
 /** Stores API key using backend secure-store command. */
@@ -102,29 +304,29 @@ export async function saveApiKey(apiKey: string): Promise<void> {
         "save_api_key request",
     );
 
-    return invoke("save_api_key", { apiKey: validatedApiKey });
+    return invokeCommand("save_api_key", { apiKey: validatedApiKey });
 }
 
 /** Checks whether an API key is currently configured. */
 export async function hasApiKey(): Promise<boolean> {
-    const payload = await invoke("has_api_key");
+    const payload = await invokeCommand("has_api_key");
     return parsePayload(z.boolean(), payload, "has_api_key");
 }
 
 /** Removes any stored API key values. */
 export async function clearApiKey(): Promise<void> {
-    return invoke("clear_api_key");
+    return invokeCommand("clear_api_key");
 }
 
 /** Fetches masked API key preview value for settings UI. */
 export async function getApiKeyPreview(): Promise<string> {
-    const payload = await invoke("get_api_key_preview");
+    const payload = await invokeCommand("get_api_key_preview");
     return parsePayload(z.string(), payload, "get_api_key_preview");
 }
 
 /** Gets the most recent clipboard capture event, if any. */
 export async function getLatestClipboardCapture(): Promise<ClipboardCapturedEvent | null> {
-    const payload = await invoke("get_latest_clipboard_capture");
+    const payload = await invokeCommand("get_latest_clipboard_capture");
 
     return parsePayload(
         clipboardCapturedEventSchema.nullable(),
@@ -135,12 +337,12 @@ export async function getLatestClipboardCapture(): Promise<ClipboardCapturedEven
 
 /** Requests the backend to focus or reveal the main application window. */
 export async function openMainWindow(): Promise<void> {
-    return invoke("open_main_window");
+    return invokeCommand("open_main_window");
 }
 
 /** Temporarily suppresses backend quick-window auto-hide on focus loss. */
 export async function suppressQuickAutoHide(durationMs: number): Promise<void> {
-    return invoke("suppress_quick_auto_hide", {
+    return invokeCommand("suppress_quick_auto_hide", {
         durationMs: Math.max(0, Math.floor(durationMs)),
     });
 }
@@ -150,7 +352,7 @@ export async function resizeQuickWindow(
     width: number,
     height: number,
 ): Promise<QuickWindowResizeResult> {
-    const payload = await invoke("resize_quick_window", {
+    const payload = await invokeCommand("resize_quick_window", {
         width,
         height,
     });
@@ -169,7 +371,7 @@ export async function resizeQuickWindow(
 export async function onClipboardCaptured(
     handler: (payload: ClipboardCapturedEvent) => void,
 ): Promise<UnlistenFn> {
-    return listen<unknown>(CLIPBOARD_CAPTURED_EVENT, (event) => {
+    return listenEvent<unknown>(CLIPBOARD_CAPTURED_EVENT, (event) => {
         if (!event.payload) {
             return;
         }
@@ -200,7 +402,7 @@ const AI_STREAM_CHUNK_EVENT = "ai-stream-chunk";
 export async function onAiStreamChunk(
     handler: (chunk: string) => void,
 ): Promise<UnlistenFn> {
-    return listen<unknown>(AI_STREAM_CHUNK_EVENT, (event) => {
+    return listenEvent<unknown>(AI_STREAM_CHUNK_EVENT, (event) => {
         const parsedPayload = aiStreamChunkSchema.safeParse(event.payload);
 
         // Stream events are best-effort; skip invalid chunks silently.

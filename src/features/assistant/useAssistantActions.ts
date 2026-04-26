@@ -10,6 +10,7 @@ import {
     type AssistantFlowDependencies,
 } from "./assistantFlowDependencies";
 import { useAppStore, usePromptFlow } from "../../store/appStore";
+import { useShallow } from "zustand/react/shallow";
 
 interface AssistantActionsParams {
     isQuickWindow: boolean;
@@ -31,22 +32,26 @@ export function useAssistantActions({
 
     // Store state & actions
     const { snapshot, setSnapshot, setStatus, setError, clearErrorDetails } =
-        useAppStore((state) => ({
-            snapshot: state.snapshot,
-            setSnapshot: state.setSnapshot,
-            setStatus: state.setStatus,
-            setError: state.setError,
-            clearErrorDetails: state.clearErrorDetails,
-        }));
+        useAppStore(
+            useShallow((state) => ({
+                snapshot: state.snapshot,
+                setSnapshot: state.setSnapshot,
+                setStatus: state.setStatus,
+                setError: state.setError,
+                clearErrorDetails: state.clearErrorDetails,
+            })),
+        );
 
     const { promptText, setPromptText, applyCapturedText, setResponseText } =
         usePromptFlow();
 
-    const { isSending, setIsSending, responseText } = useAppStore((state) => ({
-        isSending: state.isSending,
-        setIsSending: state.setIsSending,
-        responseText: state.responseText,
-    }));
+    const { isSending, setIsSending, responseText } = useAppStore(
+        useShallow((state) => ({
+            isSending: state.isSending,
+            setIsSending: state.setIsSending,
+            responseText: state.responseText,
+        })),
+    );
 
     const snapshotRef = useRef(snapshot);
     const promptRef = useRef(promptText);

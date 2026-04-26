@@ -6,6 +6,7 @@ import type {
 import type { SettingsFlowDependencies } from "./settingsFlowDependencies";
 import { defaultSettingsFlowDependencies } from "./settingsFlowDependencies";
 import { useAppStore, useUiFeedback } from "../../store/appStore";
+import { useShallow } from "zustand/react/shallow";
 
 interface SettingsActionsParams {
     dependencies?: SettingsFlowDependencies;
@@ -25,11 +26,11 @@ export function useSettingsActions(
         customDependencies ?? defaultSettingsFlowDependencies;
 
     const { snapshot, setSnapshot, setApiKeyPresent } = useAppStore(
-        (state) => ({
+        useShallow((state) => ({
             snapshot: state.snapshot,
             setSnapshot: state.setSnapshot,
             setApiKeyPresent: state.setApiKeyPresent,
-        }),
+        })),
     );
 
     const { setStatus, setError, clearErrorDetails } = useUiFeedback();

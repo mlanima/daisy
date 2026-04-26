@@ -1,2 +1,2 @@
-export { AssistantPage } from "./pages/AssistantPage";
+export { AssistantPage } from "./AssistantPage";
 export { QuickAssistantPage } from "./quick-access";

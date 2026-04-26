@@ -18,13 +18,13 @@ export function MainAssistantView() {
             isQuickWindow: false,
         });
 
-    if (!snapshot) {
-        return null;
-    }
-
     const handleSend = useCallback(() => {
         void sendCurrentPrompt();
     }, [sendCurrentPrompt]);
+
+    if (!snapshot) {
+        return null;
+    }
 
     return (
         <AssistantPage

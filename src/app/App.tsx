@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Settings as SettingsIcon } from "lucide-react";
+import { useShallow } from "zustand/react/shallow";
 import { Button } from "../shared/components";
 import {
     useAppStore,
@@ -23,12 +24,12 @@ import "./styles/app-minimal.css";
 function useAppInitialization() {
     const { isBootstrapping, completeBootstrap } = useBootstrapState();
     const { initializeApp, setSnapshot, setError, clearStatus } = useAppStore(
-        (state) => ({
+        useShallow((state) => ({
             initializeApp: state.initializeApp,
             setSnapshot: state.setSnapshot,
             setError: state.setError,
             clearStatus: state.clearStatus,
-        }),
+        })),
     );
 
     const snapshot = useSnapshot();
@@ -133,15 +134,11 @@ function AppContent() {
     const { view, setView } = useNavigation();
     const snapshot = useSnapshot();
     const isQuickWindow = useAppStore((state) => state.isQuickWindow);
-    const { status } = useAppStore((state) => ({
-        status: state.status,
-    }));
-
-    // Derive selected agent from snapshot
-    const selectedAgent =
-        snapshot?.agents.find(
-            (agent) => agent.id === snapshot.selectedAgentId,
-        ) ?? null;
+    const { status } = useAppStore(
+        useShallow((state) => ({
+            status: state.status,
+        })),
+    );
 
     if (isBootstrapping) {
         return (
@@ -153,7 +150,7 @@ function AppContent() {
         );
     }
 
-    if (!snapshot || !selectedAgent) {
+    if (!snapshot) {
         return (
             <main className="grid min-h-[68vh] place-content-center gap-2 text-center">
                 <h1 className="text-xl font-semibold tracking-tight text-rose-600 dark:text-rose-300">
