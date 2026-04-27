@@ -18,8 +18,8 @@ import {
 } from "../../schemas/appStateSchema";
 
 const CLIPBOARD_CAPTURED_EVENT = "clipboard-captured";
-const BROWSER_SNAPSHOT_STORAGE_KEY = "aids.browser.snapshot.v1";
-const BROWSER_API_KEY_STORAGE_KEY = "aids.browser.apiKey.v1";
+const BROWSER_SNAPSHOT_STORAGE_KEY = "daisy.browser.snapshot.v1";
+const BROWSER_API_KEY_STORAGE_KEY = "daisy.browser.apiKey.v1";
 
 export interface QuickWindowResizeResult {
     width: number;

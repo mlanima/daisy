@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, Card } from "../../../shared/components";
 import { AssistantLayout } from "../layouts";
 import { ResponseDisplay, AgentInfo, StatusIndicator } from "../displays";
@@ -47,6 +47,35 @@ export function AssistantPage({
     const isStudioVisible = studioPhase !== "closed";
     const isStudioExpanded = studioPhase === "open";
 
+    useEffect(() => {
+        if (studioPhase !== "opening") {
+            return;
+        }
+
+        const frame = globalThis.requestAnimationFrame(() => {
+            setStudioPhase("open");
+        });
+
+        return () => {
+            globalThis.cancelAnimationFrame(frame);
+        };
+    }, [studioPhase]);
+
+    useEffect(() => {
+        if (studioPhase !== "closing") {
+            return;
+        }
+
+        const timeout = globalThis.setTimeout(() => {
+            setIsStudioOpen(false);
+            setStudioPhase("closed");
+        }, 220);
+
+        return () => {
+            globalThis.clearTimeout(timeout);
+        };
+    }, [studioPhase]);
+
     // Studio animation handlers
     const openStudio = useCallback(() => {
         setIsStudioOpen(true);
@@ -60,10 +89,6 @@ export function AssistantPage({
             if (current === "closed" || current === "closing") return current;
             return "closing";
         });
-        setTimeout(() => {
-            setIsStudioOpen(false);
-            setStudioPhase("closed");
-        }, 220);
     }, []);
 
     // Agent handlers
@@ -130,15 +155,6 @@ export function AssistantPage({
                             onClick={openStudio}
                         >
                             Manage Agents
-                        </Button>
-
-                        <Button
-                            variant="primary"
-                            className="h-11 rounded-lg px-5"
-                            disabled={isSending || !promptText.trim()}
-                            onClick={onSend}
-                        >
-                            {isSending ? "Sending..." : "Send Prompt"}
                         </Button>
                     </div>
                 </div>

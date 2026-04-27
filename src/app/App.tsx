@@ -186,7 +186,7 @@ function AppContent() {
                                     />
                                     <div className="min-w-0">
                                         <h1 className="truncate text-lg font-semibold tracking-tight text-foreground">
-                                            AIDS Assistant
+                                            Daisy Assistant
                                         </h1>
                                         <p className="truncate text-sm text-muted-foreground">
                                             Prompt in, response out.

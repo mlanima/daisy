@@ -142,7 +142,7 @@ export function QuickAssistantPage({
                 return;
             }
 
-            suppressQuickWindowAutoHide(1400);
+            suppressQuickWindowAutoHide(180);
 
             setHasManualSplit(true);
 
@@ -203,14 +203,10 @@ export function QuickAssistantPage({
         [hasVisibleResponse],
     );
 
-    const handleInteractionGuard = useCallback(() => {
-        suppressQuickWindowAutoHide(1200);
-    }, []);
-
     const handleWindowDragStart = useCallback(
         (event: MouseEvent<HTMLButtonElement>) => {
             event.preventDefault();
-            suppressQuickWindowAutoHide(2400);
+            suppressQuickWindowAutoHide(180);
             void getCurrentWindow()
                 .startDragging()
                 .catch(() => {
@@ -224,7 +220,7 @@ export function QuickAssistantPage({
         (event: MouseEvent<HTMLButtonElement>) => {
             // Prevent default double-click titlebar-like behavior in custom region.
             event.preventDefault();
-            suppressQuickWindowAutoHide(2400);
+            suppressQuickWindowAutoHide(180);
         },
         [],
     );
@@ -233,7 +229,7 @@ export function QuickAssistantPage({
         (direction: ResizeDirection) =>
             (event: MouseEvent<HTMLButtonElement>) => {
                 event.preventDefault();
-                suppressQuickWindowAutoHide(2400);
+                suppressQuickWindowAutoHide(180);
                 void getCurrentWindow()
                     .startResizeDragging(direction)
                     .catch(() => {
@@ -247,7 +243,6 @@ export function QuickAssistantPage({
         <main
             className={`quick-shell ${hasVisibleResponse ? "has-output" : ""} relative flex h-full min-h-0 max-h-full flex-col gap-0 overflow-visible rounded-2xl border border-border/70 bg-card/96 shadow-[0_20px_48px_-30px_hsl(var(--foreground))] backdrop-blur-xl`}
             ref={shellRef}
-            onPointerDownCapture={handleInteractionGuard}
         >
             <div
                 aria-hidden="true"

@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import type { Agent, RunAgentRequest } from "../../shared/types/appState";
 import { updateRecentAgentIds } from "./agentUtils";
-import {
-    fetchQuickCaptureData,
-    suppressQuickWindowAutoHide,
-} from "./assistantService";
+import { fetchQuickCaptureData } from "./assistantService";
 import {
     defaultAssistantFlowDependencies,
     type AssistantFlowDependencies,
@@ -152,10 +149,6 @@ export function useAssistantActions({
 
                 setStatus("success", "Response generated.");
                 clearErrorDetails();
-
-                if (isQuickWindow) {
-                    suppressQuickWindowAutoHide(1200);
-                }
             } catch (error) {
                 setError(error);
             } finally {
@@ -252,7 +245,7 @@ export function useAssistantActions({
 
     /** Subscribe to clipboard capture events (quick window). */
     useEffect(() => {
-        if (!isQuickWindow || !snapshot) {
+        if (!isQuickWindow) {
             return;
         }
 
@@ -331,7 +324,6 @@ export function useAssistantActions({
         };
     }, [
         isQuickWindow,
-        snapshot,
         activeDependencies,
         applyCapturedText,
         refreshQuickCapture,

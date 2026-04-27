@@ -1,4 +1,4 @@
-const KEYRING_SERVICE: &str = "com.mlanima.aids";
+const KEYRING_SERVICE: &str = "com.mlanima.daisy";
 const KEYRING_USER: &str = "assistant-api-key";
 
 fn api_entry() -> Result<keyring::Entry, String> {

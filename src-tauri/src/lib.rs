@@ -364,7 +364,7 @@ pub fn run() {
 
             let mut tray_builder = TrayIconBuilder::with_id("main-tray")
                 .menu(&tray_menu)
-                .tooltip("aids")
+                .tooltip("daisy")
                 .show_menu_on_left_click(false);
 
             if let Some(icon) = app.default_window_icon().cloned() {

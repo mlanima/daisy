@@ -1,4 +1,4 @@
-import { Settings as SettingsIcon } from "lucide-react";
+import { ArrowRight as ArrowRightIcon } from "lucide-react";
 import type { Agent } from "../../../shared/types/appState";
 import { Button } from "../../../shared/components";
 import { AgentListItem } from "./AgentListItem";
@@ -69,7 +69,7 @@ export function AgentStudio({
                         aria-label="Close agent studio"
                         onClick={onClose}
                     >
-                        <SettingsIcon className="h-5 w-5" />
+                        <ArrowRightIcon className="h-5 w-5" />
                     </Button>
                 </div>
 

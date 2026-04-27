@@ -104,7 +104,7 @@ export function MainWindowTitleBar() {
                     className="h-2 w-2 rounded-full bg-primary shadow-[0_0_10px_hsl(var(--primary)/0.7)]"
                 />
                 <span className="truncate text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    AIDS Assistant
+                    Daisy Assistant
                 </span>
             </div>
 

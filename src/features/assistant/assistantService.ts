@@ -118,11 +118,22 @@ export function bindQuickWindowLifecycle(onFocus: () => void): () => void {
         blurTimer = setTimeout(() => {
             blurTimer = null;
 
-            if (document.hasFocus() || isQuickHideSuppressed()) {
-                return;
-            }
+            // Use native window focus state; document focus can remain true
+            // briefly during webview transitions and block expected auto-hide.
+            void webviewWindow
+                .isFocused()
+                .then((isFocused) => {
+                    if (isFocused || isQuickHideSuppressed()) {
+                        return;
+                    }
 
-            void webviewWindow.hide();
+                    return webviewWindow.hide();
+                })
+                .catch(() => {
+                    if (!isQuickHideSuppressed()) {
+                        void webviewWindow.hide();
+                    }
+                });
         }, 140);
     };
 

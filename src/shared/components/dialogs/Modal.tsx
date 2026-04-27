@@ -42,9 +42,8 @@ export function Modal({
                 disabled={isPending}
             />
 
-            <div
+            <dialog
                 className={`relative z-10 flex flex-col gap-4 overflow-hidden rounded-3xl border border-border/70 bg-card/95 p-6 shadow-2xl backdrop-blur animate-[shell-enter_180ms_cubic-bezier(0.2,0.8,0.2,1)] ${sizeClasses[size]}`}
-                role="dialog"
                 aria-modal="true"
                 aria-labelledby={`modal-title-${title}`}
             >
@@ -63,7 +62,7 @@ export function Modal({
                 </div>
 
                 {children}
-            </div>
+            </dialog>
         </div>,
         document.body,
     );
