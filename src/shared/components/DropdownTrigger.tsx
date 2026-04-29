@@ -18,7 +18,7 @@ export function DropdownTrigger({
     className,
 }: Readonly<DropdownTriggerProps>) {
     const classes = [
-        "inline-flex max-w-full items-center gap-2 rounded-lg border px-3 py-1.5 text-left transition",
+        "inline-flex max-w-full items-center justify-between gap-2 rounded-lg border px-3 py-1.5 text-left transition",
         isOpen
             ? "border-primary/60 bg-primary/15 text-foreground shadow-sm"
             : "border-border/80 bg-background/75 text-foreground hover:border-primary/45 hover:bg-primary/10",

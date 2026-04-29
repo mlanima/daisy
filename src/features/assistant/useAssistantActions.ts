@@ -42,25 +42,29 @@ export function useAssistantActions({
     const { promptText, setPromptText, applyCapturedText, setResponseText } =
         usePromptFlow();
 
-    const { isSending, setIsSending, responseText } = useAppStore(
-        useShallow((state) => ({
-            isSending: state.isSending,
-            setIsSending: state.setIsSending,
-            responseText: state.responseText,
-        })),
-    );
+    const { isSending, setIsSending, responseText, apiKeyPresent } =
+        useAppStore(
+            useShallow((state) => ({
+                isSending: state.isSending,
+                setIsSending: state.setIsSending,
+                responseText: state.responseText,
+                apiKeyPresent: state.apiKeyPresent,
+            })),
+        );
 
     const snapshotRef = useRef(snapshot);
     const promptRef = useRef(promptText);
     const sourceRef = useRef("");
     const responseRef = useRef(responseText);
     const isSendingRef = useRef(isSending);
+    const apiKeyPresentRef = useRef(apiKeyPresent);
 
     // Keep refs in sync with state
     snapshotRef.current = snapshot;
     promptRef.current = promptText;
     responseRef.current = responseText;
     isSendingRef.current = isSending;
+    apiKeyPresentRef.current = apiKeyPresent;
 
     /** Refreshes quick capture and applies to state. */
     const refreshQuickCapture = useCallback(async () => {
@@ -103,6 +107,11 @@ export function useAssistantActions({
             const activeSnapshot = snapshotRef.current;
 
             if (!activeSnapshot) {
+                return;
+            }
+
+            if (!apiKeyPresentRef.current) {
+                setStatus("error", "Set API key in Settings before sending.");
                 return;
             }
 

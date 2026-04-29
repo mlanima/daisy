@@ -4,6 +4,7 @@ import {
     useSnapshot,
     usePromptFlow,
     useUiFeedback,
+    useApiKeyState,
 } from "../../store/appStore";
 import { useAssistantActions } from "../../features/assistant/useAssistantActions";
 
@@ -12,6 +13,7 @@ export function MainAssistantView() {
     const snapshot = useSnapshot();
     const { promptText, responseText, isSending, setPromptText } =
         usePromptFlow();
+    const { apiKeyPresent } = useApiKeyState();
     const { lastErrorDetails, clearErrorDetails } = useUiFeedback();
     const { sendCurrentPrompt, selectAgent, updateAgents } =
         useAssistantActions({
@@ -33,6 +35,7 @@ export function MainAssistantView() {
             promptText={promptText}
             responseText={responseText}
             isSending={isSending}
+            apiKeyPresent={apiKeyPresent}
             errorDetails={lastErrorDetails}
             onSelectAgent={selectAgent}
             onPromptChange={setPromptText}

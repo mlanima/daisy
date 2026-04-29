@@ -23,7 +23,7 @@ const buttonVariantClasses: Record<
 };
 
 const dangerButtonClass =
-    "!border-1 border-rose-200/70 bg-rose-50/90 text-rose-600 hover:border-rose-300 hover:bg-rose-100 hover:text-rose-700 focus-visible:ring-rose-500/50 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300 dark:hover:border-rose-400/40 dark:hover:bg-rose-500/16 dark:hover:text-rose-200";
+    "!border !border-rose-200/70 !bg-stone-50/90 !text-rose-600 hover:!border-rose-300 hover:!bg-rose-100 hover:!text-rose-700 focus-visible:!ring-rose-500/50 dark:!border-rose-500/30 dark:!bg-rose-500/10 dark:!text-rose-300 dark:hover:!border-rose-400/40 dark:hover:!bg-rose-500/16 dark:hover:!text-rose-200";
 
 function joinClasses(...values: Array<string | false | null | undefined>) {
     return values.filter(Boolean).join(" ");
@@ -58,8 +58,8 @@ export function Button({
         baseButtonClass,
         danger ? "" : buttonVariantClasses[variant],
         activeTabClass,
-        danger ? dangerButtonClass : "",
         className,
+        danger ? dangerButtonClass : "",
     );
 
     return (

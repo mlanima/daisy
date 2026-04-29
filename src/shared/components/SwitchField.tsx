@@ -19,8 +19,11 @@ export function SwitchField({
     className,
     ...props
 }: Readonly<SwitchFieldProps>) {
+    const isDisabled = Boolean((props as any).disabled);
+
     const classes = [
         "flex items-center justify-between gap-3 rounded-xl border border-border/75 bg-card px-3 py-2.5 shadow-sm",
+        isDisabled ? "cursor-not-allowed" : "cursor-pointer",
         className ?? "",
     ]
         .filter(Boolean)

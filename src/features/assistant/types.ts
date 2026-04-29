@@ -6,6 +6,7 @@ export interface AssistantPageProps {
     promptText: string;
     responseText: string;
     isSending: boolean;
+    apiKeyPresent: boolean;
     errorDetails: string;
     onSelectAgent: (agentId: string) => void;
     onPromptChange: (value: string) => void;
@@ -21,6 +22,7 @@ export interface QuickAssistantPageProps {
     promptText: string;
     responseText: string;
     isSending: boolean;
+    apiKeyPresent: boolean;
     windowSize: WindowSize;
     onSelectAgent: (agentId: string) => void;
     onPromptChange: (value: string) => void;

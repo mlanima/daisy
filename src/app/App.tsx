@@ -134,6 +134,16 @@ function AppContent() {
     const { view, setView } = useNavigation();
     const snapshot = useSnapshot();
     const isQuickWindow = useAppStore((state) => state.isQuickWindow);
+    // Keep a DOM dataset in sync so CSS can scope quick-window-only overrides.
+    useEffect(() => {
+        if (typeof document === "undefined") return;
+
+        if (isQuickWindow) {
+            document.documentElement.dataset.quickWindow = "true";
+        } else {
+            delete document.documentElement.dataset.quickWindow;
+        }
+    }, [isQuickWindow]);
     const { status } = useAppStore(
         useShallow((state) => ({
             status: state.status,
@@ -165,6 +175,18 @@ function AppContent() {
 
     if (isQuickWindow) {
         return <QuickAssistantView />;
+    }
+
+    // Expose quick-window flag to CSS to allow scoped styling when rendered
+    // (kept outside of the render branch above so it updates on changes).
+    // NOTE: we don't keep a state here — we update the dataset imperatively
+    // so the styles in `app-minimal.css` can detect quick-window mode.
+    if (typeof document !== "undefined") {
+        if (isQuickWindow) {
+            document.documentElement.dataset.quickWindow = "true";
+        } else {
+            delete document.documentElement.dataset.quickWindow;
+        }
     }
 
     return (

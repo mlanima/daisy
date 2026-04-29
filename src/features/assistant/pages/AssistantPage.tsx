@@ -19,6 +19,7 @@ export function AssistantPage({
     promptText,
     responseText,
     isSending,
+    apiKeyPresent,
     errorDetails,
     onSelectAgent,
     onPromptChange,
@@ -137,7 +138,10 @@ export function AssistantPage({
                 {/* Header: Agent Info + Status + Buttons */}
                 <div className="flex flex-wrap items-start justify-between gap-2">
                     <AgentInfo agent={activeAgent} />
-                    <StatusIndicator isSending={isSending} />
+                    <StatusIndicator
+                        isSending={isSending}
+                        apiKeyPresent={apiKeyPresent}
+                    />
                 </div>
 
                 {/* Agent Selector + Controls */}
@@ -152,7 +156,7 @@ export function AssistantPage({
                     <div className="ml-auto inline-flex items-center gap-2">
                         <Button
                             variant="ghost"
-                            className="h-11 rounded-lg !border-primary border px-4"
+                            className="h-11 rounded-lg border border-primary! px-4"
                             onClick={openStudio}
                         >
                             <UsersRound className="mr-2 h-4 w-4" />
@@ -167,6 +171,7 @@ export function AssistantPage({
                     onPromptChange={onPromptChange}
                     onSend={onSend}
                     isSending={isSending}
+                    apiKeyPresent={apiKeyPresent}
                     errorDetails={errorDetails}
                     onClearError={onClearErrorDetails}
                 />

@@ -4,6 +4,7 @@ import {
     useSnapshot,
     usePromptFlow,
     useUiFeedback,
+    useApiKeyState,
 } from "../../store/appStore";
 import { useAssistantActions } from "../../features/assistant/useAssistantActions";
 import { openMainAssistantWindow } from "../../features/assistant/assistantService";
@@ -13,6 +14,7 @@ export function QuickAssistantView() {
     const snapshot = useSnapshot();
     const { promptText, responseText, isSending, setPromptText } =
         usePromptFlow();
+    const { apiKeyPresent } = useApiKeyState();
     const { setError } = useUiFeedback();
     const { refreshQuickCapture, sendCurrentPrompt, selectAgent } =
         useAssistantActions({
@@ -47,6 +49,7 @@ export function QuickAssistantView() {
             promptText={promptText}
             responseText={responseText}
             isSending={isSending}
+            apiKeyPresent={apiKeyPresent}
             windowSize={snapshot.settings.windowSize}
             onSelectAgent={selectAgent}
             onPromptChange={setPromptText}

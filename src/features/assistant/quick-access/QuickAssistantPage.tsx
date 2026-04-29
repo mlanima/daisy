@@ -23,6 +23,7 @@ export function QuickAssistantPage({
     promptText,
     responseText,
     isSending,
+    apiKeyPresent,
     windowSize,
     onSelectAgent,
     onPromptChange,
@@ -286,7 +287,7 @@ export function QuickAssistantPage({
                         variant="primary"
                         className="h-8 px-3"
                         onClick={onSend}
-                        disabled={isSending || !promptText.trim()}
+                        disabled={isSending || !apiKeyPresent}
                     >
                         {isSending ? "..." : "Send"}
                     </Button>

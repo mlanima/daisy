@@ -6,6 +6,7 @@ interface PromptFormProps {
     onPromptChange: (text: string) => void;
     onSend: () => void;
     isSending?: boolean;
+    apiKeyPresent?: boolean;
     errorDetails?: string;
     onClearError?: () => void;
 }
@@ -16,15 +17,21 @@ export function PromptForm({
     onPromptChange,
     onSend,
     isSending = false,
+    apiKeyPresent = true,
     errorDetails,
     onClearError,
 }: Readonly<PromptFormProps>) {
     const handleSubmit = useCallback(
-        (event: React.FormEvent<HTMLFormElement>) => {
+        (event: { preventDefault: () => void }) => {
             event.preventDefault();
+            if (!promptText?.trim()) {
+                // Don't send empty prompts
+                return;
+            }
+
             onSend();
         },
-        [onSend],
+        [onSend, promptText],
     );
 
     return (
@@ -40,7 +47,7 @@ export function PromptForm({
             <Button
                 type="submit"
                 variant="primary"
-                disabled={isSending || !promptText.trim()}
+                disabled={isSending || !apiKeyPresent}
             >
                 {isSending ? "Sending..." : "Send Prompt"}
             </Button>

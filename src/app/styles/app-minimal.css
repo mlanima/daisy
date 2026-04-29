@@ -99,6 +99,13 @@
         background: transparent;
     }
 
+    /* When running as the compact quick popup, ensure the root background
+       matches the quick shell so native window frame doesn't show through. */
+    :root[data-quick-window="true"] body,
+    :root[data-quick-window="true"] #root {
+        background: hsl(var(--card));
+    }
+
     body {
         position: relative;
         color: hsl(var(--foreground));
@@ -172,6 +179,18 @@
     select {
         color: inherit;
         font: inherit;
+    }
+
+    /* Make native buttons and button-like controls show pointer on hover */
+    button:not(:disabled),
+    a[role="button"]:not([aria-disabled="true"]),
+    [role="button"]:not([aria-disabled="true"]) {
+        cursor: pointer;
+    }
+
+    button:disabled,
+    [aria-disabled="true"] {
+        cursor: not-allowed;
     }
 
     code {
@@ -387,6 +406,13 @@
     transform: translate(-50%, -50%);
     border-radius: 999px;
     background: hsl(var(--muted-foreground) / 0.35);
+}
+
+/* Hide the decorative pill handles and tiny corner-like visuals in the compact quick popup
+   — these are useful in the full app but look out of place in the small quick-access window. */
+.quick-shell .quick-splitter::after,
+.quick-shell .quick-resize-bottom::after {
+    display: none;
 }
 
 .quick-shell.constrained:not(.has-output) .quick-input {
