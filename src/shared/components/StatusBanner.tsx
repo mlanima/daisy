@@ -15,18 +15,18 @@ interface ToneVisualConfig {
 const TONE_VISUAL_CONFIG_BY_TONE: Record<StatusTone, ToneVisualConfig> = {
     error: {
         containerClass:
-            "border-rose-300/80 bg-rose-50/85 text-rose-900 dark:border-rose-500/65 dark:bg-rose-950/35 dark:text-rose-100",
+            "border-rose-300/80 bg-rose-50 text-rose-900 dark:border-rose-500/65 dark:bg-rose-950 dark:text-rose-100",
         iconClass: "text-rose-600 dark:text-rose-300",
         icon: AlertCircle,
     },
     success: {
         containerClass:
-            "border-emerald-300/80 bg-emerald-50/85 text-emerald-900 dark:border-emerald-500/65 dark:bg-emerald-950/35 dark:text-emerald-100",
+            "border-emerald-300/80 bg-emerald-50 text-emerald-900 dark:border-emerald-500/65 dark:bg-emerald-950 dark:text-emerald-100",
         iconClass: "text-emerald-600 dark:text-emerald-300",
         icon: CheckCircle2,
     },
     idle: {
-        containerClass: "border-border/80 bg-card/85 text-foreground/90",
+        containerClass: "border-border/80 bg-card text-foreground/90",
         iconClass: "text-muted-foreground",
         icon: Info,
     },

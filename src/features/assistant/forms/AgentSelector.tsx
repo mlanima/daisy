@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import type { Agent } from "../../../shared/types/appState";
-import { AgentDropdownTrigger } from "../components/AgentDropdownTrigger";
+import { DropdownTrigger } from "../../../shared/components";
 import { AgentDropdownMenu } from "../components/AgentDropdownMenu";
 
 interface AgentSelectorProps {
@@ -29,7 +29,7 @@ export function AgentSelector({
                 Agent
             </p>
             <div ref={anchorRef} className="w-fit">
-                <AgentDropdownTrigger
+                <DropdownTrigger
                     label={label}
                     isOpen={isOpen}
                     onToggle={() => setIsOpen((prev) => !prev)}

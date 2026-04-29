@@ -177,7 +177,7 @@ function AppContent() {
 
                 <main className="custom-scrollbar relative z-10 flex h-full w-full flex-col gap-3 overflow-y-auto overflow-x-hidden p-3">
                     {view === "assistant" ? (
-                        <header className="rounded-xl border border-border/75 bg-card/80 p-3 shadow-sm backdrop-blur-xl">
+                        <header className="rounded-xl border border-border/75 bg-card p-3 shadow-sm">
                             <div className="flex items-center justify-between gap-3">
                                 <div className="flex min-w-0 items-center gap-2.5">
                                     <span
@@ -205,9 +205,7 @@ function AppContent() {
                             </div>
                         </header>
                     ) : null}
-                    <div
-                        className={view === "assistant" ? "min-h-0 flex-1" : ""}
-                    >
+                    <div className="min-h-0 flex-1">
                         {view === "assistant" ? (
                             <MainAssistantView />
                         ) : (

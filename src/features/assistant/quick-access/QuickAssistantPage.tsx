@@ -7,11 +7,10 @@ import {
     type PointerEvent,
 } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { Button } from "../../../shared/components";
+import { Button, DropdownTrigger } from "../../../shared/components";
 import { suppressQuickWindowAutoHide } from "../assistantService";
 import type { QuickAssistantPageProps } from "../types";
 import { useQuickAssistantShell } from "./useQuickAssistantShell";
-import { AgentDropdownTrigger } from "../components/AgentDropdownTrigger";
 import { AgentDropdownMenu } from "../components/AgentDropdownMenu";
 
 type ResizeDirection = "South";
@@ -241,12 +240,12 @@ export function QuickAssistantPage({
 
     return (
         <main
-            className={`quick-shell ${hasVisibleResponse ? "has-output" : ""} relative flex h-full min-h-0 max-h-full flex-col gap-0 overflow-visible rounded-2xl border border-border/70 bg-card/96 shadow-[0_20px_48px_-30px_hsl(var(--foreground))] backdrop-blur-xl`}
+            className={`quick-shell ${hasVisibleResponse ? "has-output" : ""} relative flex h-full min-h-0 max-h-full flex-col gap-0 overflow-visible rounded-2xl border border-border/70 bg-card shadow-[0_20px_48px_-30px_hsl(var(--foreground))]`}
             ref={shellRef}
         >
             <div
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-x-0 top-0 z-20 h-2 rounded-t-2xl border-b border-border/70 bg-muted/65"
+                className="pointer-events-none absolute inset-x-0 top-0 z-20 h-2 rounded-t-2xl border-b border-border/70 bg-muted"
             />
 
             <button
@@ -260,7 +259,7 @@ export function QuickAssistantPage({
 
             <div className="flex items-center justify-between gap-2 border-b border-border/65 px-2.5 py-2">
                 <div ref={dropdownAnchorRef} className="min-w-0">
-                    <AgentDropdownTrigger
+                    <DropdownTrigger
                         label={selectedAgent?.name?.trim() || "Select agent"}
                         isOpen={isOverflowOpen}
                         onToggle={toggleOverflow}

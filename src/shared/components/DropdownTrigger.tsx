@@ -1,7 +1,7 @@
 import { ChevronDown } from "lucide-react";
-import { Button } from "../../../shared/components";
+import { Button } from "./Button";
 
-interface AgentDropdownTriggerProps {
+export interface DropdownTriggerProps {
     label: string;
     isOpen: boolean;
     onToggle: () => void;
@@ -9,14 +9,14 @@ interface AgentDropdownTriggerProps {
     className?: string;
 }
 
-/** Shared dropdown trigger used by assistant views for agent selection. */
-export function AgentDropdownTrigger({
+/** Generic dropdown trigger button used across the app. */
+export function DropdownTrigger({
     label,
     isOpen,
     onToggle,
-    ariaLabel = "Choose agent",
+    ariaLabel = "Open menu",
     className,
-}: Readonly<AgentDropdownTriggerProps>) {
+}: Readonly<DropdownTriggerProps>) {
     const classes = [
         "inline-flex max-w-full items-center gap-2 rounded-lg border px-3 py-1.5 text-left transition",
         isOpen

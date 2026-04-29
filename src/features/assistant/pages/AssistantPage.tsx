@@ -3,6 +3,7 @@ import { Button, Card } from "../../../shared/components";
 import { AssistantLayout } from "../layouts";
 import { ResponseDisplay, AgentInfo, StatusIndicator } from "../displays";
 import { PromptForm, AgentSelector } from "../forms";
+import { UsersRound } from "lucide-react";
 import { CreateAgentDialog, AgentStudio } from "../dialogs";
 import { useAccordionState } from "../accordion";
 import { useAssistantAgentManagement } from "../useAssistantAgentManagement";
@@ -151,9 +152,10 @@ export function AssistantPage({
                     <div className="ml-auto inline-flex items-center gap-2">
                         <Button
                             variant="ghost"
-                            className="h-11 rounded-lg px-4"
+                            className="h-11 rounded-lg !border-primary border px-4"
                             onClick={openStudio}
                         >
+                            <UsersRound className="mr-2 h-4 w-4" />
                             Manage Agents
                         </Button>
                     </div>

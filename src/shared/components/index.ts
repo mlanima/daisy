@@ -10,3 +10,5 @@ export { TextareaInput } from "./forms/TextareaInput";
 export type { TextareaInputProps } from "./forms/TextareaInput";
 export { Modal } from "./dialogs/Modal";
 export type { ModalProps } from "./dialogs/Modal";
+export { DropdownTrigger } from "./DropdownTrigger";
+export type { DropdownTriggerProps } from "./DropdownTrigger";

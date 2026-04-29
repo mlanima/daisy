@@ -93,7 +93,7 @@ export function MainWindowTitleBar() {
     }, []);
 
     return (
-        <header className="relative z-30 flex h-10 items-center justify-between border-b border-border/70 bg-card/90 pl-2 pr-1 backdrop-blur-xl">
+        <header className="relative z-30 flex h-10 items-center justify-between border-b border-border/70 bg-card pl-2 pr-1">
             <div
                 data-tauri-drag-region
                 className="flex min-w-0 flex-1 items-center gap-2.5 px-2 select-none"
