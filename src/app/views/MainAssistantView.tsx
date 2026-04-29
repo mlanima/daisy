@@ -1,26 +1,28 @@
+import { useCallback } from "react";
 import { AssistantPage } from "../../features/assistant";
-import { useAppControllerStore } from "../appControllerStore";
+import {
+    useSnapshot,
+    usePromptFlow,
+    useUiFeedback,
+    useApiKeyState,
+} from "../../store/appStore";
+import { useAssistantActions } from "../../features/assistant/useAssistantActions";
 
 /** Renders the full assistant workspace in the main window. */
 export function MainAssistantView() {
-    const controller = useAppControllerStore((state) => state.controller);
+    const snapshot = useSnapshot();
+    const { promptText, responseText, isSending, setPromptText } =
+        usePromptFlow();
+    const { apiKeyPresent } = useApiKeyState();
+    const { lastErrorDetails, clearErrorDetails } = useUiFeedback();
+    const { sendCurrentPrompt, selectAgent, updateAgents } =
+        useAssistantActions({
+            isQuickWindow: false,
+        });
 
-    if (!controller) {
-        return null;
-    }
-
-    const {
-        snapshot,
-        promptText,
-        responseText,
-        isSending,
-        lastErrorDetails,
-        setPromptText,
-        clearErrorDetails,
-        sendCurrentPrompt,
-        onSelectAgent,
-        onUpdateAgents,
-    } = controller;
+    const handleSend = useCallback(() => {
+        void sendCurrentPrompt();
+    }, [sendCurrentPrompt]);
 
     if (!snapshot) {
         return null;
@@ -33,13 +35,12 @@ export function MainAssistantView() {
             promptText={promptText}
             responseText={responseText}
             isSending={isSending}
+            apiKeyPresent={apiKeyPresent}
             errorDetails={lastErrorDetails}
-            onSelectAgent={onSelectAgent}
+            onSelectAgent={selectAgent}
             onPromptChange={setPromptText}
-            onSend={() => {
-                void sendCurrentPrompt();
-            }}
-            onUpdateAgents={onUpdateAgents}
+            onSend={handleSend}
+            onUpdateAgents={updateAgents}
             onClearErrorDetails={clearErrorDetails}
         />
     );

@@ -39,23 +39,18 @@ export function useAssistantPromptFlow({
 
     const promptRef = useRef("");
     const sourceRef = useRef("");
+    const responseRef = useRef("");
     const isSendingRef = useRef(false);
     // Refs provide latest values inside stable async callbacks.
     promptRef.current = promptText;
     sourceRef.current = sourceText;
+    responseRef.current = responseText;
     isSendingRef.current = isSending;
 
     /** Applies captured clipboard text to source and prompt inputs. */
     const applyCapturedText = useCallback((text: string) => {
         setSourceText(text);
         setPromptText(text);
-        setResponseText("");
-    }, []);
-
-    /** Clears prompt/source/response fields when no capture is available. */
-    const clearCapturedText = useCallback(() => {
-        setSourceText("");
-        setPromptText("");
         setResponseText("");
     }, []);
 
@@ -66,18 +61,26 @@ export function useAssistantPromptFlow({
 
         applySnapshotLocally(latestSnapshot);
 
-        if (!latestCapture?.text.trim()) {
-            clearCapturedText();
+        const latestCaptureText = latestCapture?.text.trim() ?? "";
+
+        // Preserve the current prompt/answer when no capture is available.
+        if (!latestCaptureText) {
             return;
         }
 
-        applyCapturedText(latestCapture.text);
-    }, [
-        applyCapturedText,
-        applySnapshotLocally,
-        clearCapturedText,
-        dependencies,
-    ]);
+        const currentPromptText = promptRef.current.trim();
+        const currentSourceText = sourceRef.current.trim();
+        const hasExistingResponse = responseRef.current.trim().length > 0;
+        const isSameAsCurrentCapture =
+            latestCaptureText === currentPromptText ||
+            latestCaptureText === currentSourceText;
+
+        // Ignore focus-refresh replays of the same capture to avoid wiping output.
+        if (hasExistingResponse && isSameAsCurrentCapture) {
+            return;
+        }
+        applyCapturedText(latestCaptureText);
+    }, [applyCapturedText, applySnapshotLocally, dependencies]);
 
     /** Sends current prompt and streams response chunks into UI state. */
     const sendCurrentPrompt = useCallback(

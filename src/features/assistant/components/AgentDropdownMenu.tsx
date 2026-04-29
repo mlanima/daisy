@@ -5,25 +5,29 @@ import {
     type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
-import type { Agent } from "../../../../shared/types/appState";
-import { Button } from "../../../../shared/components";
+import type { Agent } from "../../../shared/types/appState";
+import { Button } from "../../../shared/components";
 
-interface QuickOverflowMenuProps {
+interface AgentDropdownMenuProps {
     agents: Agent[];
     anchorRef: RefObject<HTMLElement | null>;
+    boundaryRef?: RefObject<HTMLElement | null>;
     selectedAgentId: string | null;
     isOpen: boolean;
     onSelectAgent: (agentId: string) => void;
+    ariaLabel?: string;
 }
 
-/** Overlay dropdown menu for selecting any available quick agent. */
-export function QuickOverflowMenu({
+/** Shared overlay dropdown menu for selecting any available agent. */
+export function AgentDropdownMenu({
     agents,
     anchorRef,
+    boundaryRef,
     selectedAgentId,
     isOpen,
     onSelectAgent,
-}: Readonly<QuickOverflowMenuProps>) {
+    ariaLabel = "Select agent",
+}: Readonly<AgentDropdownMenuProps>) {
     const [position, setPosition] = useState<{
         top: number;
         left: number;
@@ -45,35 +49,54 @@ export function QuickOverflowMenu({
             }
 
             const rect = anchor.getBoundingClientRect();
+            const boundary =
+                boundaryRef?.current?.getBoundingClientRect() ?? null;
             const viewportWidth = globalThis.innerWidth;
             const viewportHeight = globalThis.innerHeight;
             const edgePadding = 8;
             const gap = 6;
+            const framePadding = 6;
+            const boundsLeft = boundary
+                ? Math.max(
+                      edgePadding,
+                      Math.round(boundary.left + framePadding),
+                  )
+                : edgePadding;
+            const boundsRight = boundary
+                ? Math.min(
+                      viewportWidth - edgePadding,
+                      Math.round(boundary.right - framePadding),
+                  )
+                : viewportWidth - edgePadding;
+            const boundsTop = boundary
+                ? Math.max(edgePadding, Math.round(boundary.top + framePadding))
+                : edgePadding;
+            const boundsBottom = boundary
+                ? Math.min(
+                      viewportHeight - edgePadding,
+                      Math.round(boundary.bottom - framePadding),
+                  )
+                : viewportHeight - edgePadding;
+            const boundsWidth = Math.max(140, boundsRight - boundsLeft);
             const desiredWidth = Math.max(Math.round(rect.width), 192);
-            const width = Math.min(
-                Math.max(192, desiredWidth),
-                Math.max(192, viewportWidth - edgePadding * 2),
-            );
-            const spaceRight = viewportWidth - rect.right - gap - edgePadding;
-            const spaceLeft = rect.left - gap - edgePadding;
+            const width = Math.min(Math.max(140, desiredWidth), boundsWidth);
+            const spaceRight = boundsRight - rect.right - gap;
+            const spaceLeft = rect.left - boundsLeft - gap;
             const preferRight = spaceRight >= 120 || spaceRight >= spaceLeft;
             const proposedLeft = preferRight
                 ? rect.right + gap
                 : rect.left - width - gap;
-            const maxLeft = Math.max(edgePadding, viewportWidth - width - edgePadding);
+            const maxLeft = Math.max(boundsLeft, boundsRight - width);
             const left = Math.min(
-                Math.max(Math.round(proposedLeft), edgePadding),
+                Math.max(Math.round(proposedLeft), boundsLeft),
                 maxLeft,
             );
-            const maxTop = Math.max(edgePadding, viewportHeight - edgePadding - 120);
+            const maxTop = Math.max(boundsTop, boundsBottom - 120);
             const top = Math.min(
-                Math.max(Math.round(rect.top), edgePadding),
+                Math.max(Math.round(rect.top), boundsTop),
                 maxTop,
             );
-            const maxHeight = Math.max(
-                120,
-                Math.min(420, viewportHeight - top - edgePadding),
-            );
+            const maxHeight = Math.max(80, Math.min(420, boundsBottom - top));
 
             setPosition({
                 top,
@@ -92,13 +115,9 @@ export function QuickOverflowMenu({
             globalThis.removeEventListener("resize", updatePosition);
             globalThis.removeEventListener("scroll", updatePosition, true);
         };
-    }, [anchorRef, isOpen]);
+    }, [anchorRef, boundaryRef, isOpen]);
 
-    if (!isOpen || agents.length === 0) {
-        return null;
-    }
-
-    if (!position) {
+    if (!isOpen || agents.length === 0 || !position) {
         return null;
     }
 
@@ -115,7 +134,7 @@ export function QuickOverflowMenu({
         <div
             className="custom-scrollbar flex flex-col gap-1 overflow-y-auto overflow-x-hidden rounded-xl border border-primary/45 bg-background p-1.5 shadow-[0_22px_36px_-18px_hsl(var(--foreground))]"
             role="menu"
-            aria-label="Select agent"
+            aria-label={ariaLabel}
             style={menuStyle}
         >
             {agents.map((agent) => (

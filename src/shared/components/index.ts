@@ -1,4 +1,14 @@
 export { Button } from "./Button";
+export type { ButtonProps } from "./Button";
 export { Card } from "./Card";
+export type { CardProps } from "./Card";
 export { StatusBanner } from "./StatusBanner";
 export { SwitchField } from "./SwitchField";
+export { TextInput } from "./forms/TextInput";
+export type { TextInputProps } from "./forms/TextInput";
+export { TextareaInput } from "./forms/TextareaInput";
+export type { TextareaInputProps } from "./forms/TextareaInput";
+export { Modal } from "./dialogs/Modal";
+export type { ModalProps } from "./dialogs/Modal";
+export { DropdownTrigger } from "./DropdownTrigger";
+export type { DropdownTriggerProps } from "./DropdownTrigger";

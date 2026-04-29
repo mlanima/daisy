@@ -37,6 +37,38 @@ export function useAssistantClipboardFlow({
         let closed = false;
         let unlistenClipboard: (() => void) | null = null;
 
+        const handleClipboardCaptured = async (text: string) => {
+            try {
+                await refreshQuickCapture();
+            } catch (error) {
+                if (!closed) {
+                    reportError(error, "Clipboard refresh failed");
+                }
+            }
+
+            if (closed || !isQuickWindow) {
+                return;
+            }
+
+            const activeSnapshot = snapshotRef.current;
+            const activeAgent =
+                dependencies.resolveSelectedAgent(activeSnapshot);
+
+            if (!activeSnapshot || !activeAgent) {
+                return;
+            }
+
+            applyCapturedText(text);
+
+            if (activeSnapshot.settings.autoSendPrompt) {
+                void sendCurrentPrompt({
+                    agentId: activeAgent.id,
+                    promptOverride: text,
+                    sourceText: text,
+                });
+            }
+        };
+
         /** Initializes clipboard subscription and optional quick-window refresh. */
         const initClipboardListener = async () => {
             try {
@@ -54,23 +86,7 @@ export function useAssistantClipboardFlow({
                             return;
                         }
 
-                        const activeSnapshot = snapshotRef.current;
-                        const activeAgent =
-                            dependencies.resolveSelectedAgent(activeSnapshot);
-
-                        if (!activeSnapshot || !activeAgent) {
-                            return;
-                        }
-
-                        applyCapturedText(payload.text);
-
-                        if (activeSnapshot.settings.autoSendPrompt) {
-                            void sendCurrentPrompt({
-                                agentId: activeAgent.id,
-                                promptOverride: payload.text,
-                                sourceText: payload.text,
-                            });
-                        }
+                        void handleClipboardCaptured(payload.text);
                     });
             } catch (error) {
                 if (!closed) {

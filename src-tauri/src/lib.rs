@@ -7,9 +7,12 @@ mod state_store;
 
 use models::{AiRunResponse, AppStateSnapshot, ModelConfig, RunAgentRequest};
 use serde::Serialize;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::{SystemTime, UNIX_EPOCH};
 use state_store::StateStore;
 use tauri::{
     LogicalSize,
+    PhysicalPosition, Position,
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     Manager, State, WindowEvent,
@@ -32,6 +35,21 @@ struct PreparedAgentRunContext {
     user_prompt: String,
     user_prompt_chars: usize,
     api_key: String,
+}
+
+const QUICK_WINDOW_BOTTOM_INSET: f64 = 26.0;
+const QUICK_WINDOW_FIXED_WIDTH: f64 = 492.0;
+static QUICK_AUTO_HIDE_SUPPRESSED_UNTIL_MS: AtomicU64 = AtomicU64::new(0);
+
+fn current_epoch_ms() -> u64 {
+    match SystemTime::now().duration_since(UNIX_EPOCH) {
+        Ok(duration) => duration.as_millis() as u64,
+        Err(_) => 0,
+    }
+}
+
+fn is_quick_auto_hide_suppressed() -> bool {
+    current_epoch_ms() < QUICK_AUTO_HIDE_SUPPRESSED_UNTIL_MS.load(Ordering::Relaxed)
 }
 
 fn resolve_user_prompt(request: RunAgentRequest) -> Result<String, String> {
@@ -97,6 +115,9 @@ fn format_agent_run_error(context: &PreparedAgentRunContext, details: &str) -> S
 
 fn show_main_window(app: &tauri::AppHandle) {
     if let Some(window) = app.get_webview_window("main") {
+        if let Some(icon) = app.default_window_icon().cloned() {
+            let _ = window.set_icon(icon);
+        }
         let _ = window.set_skip_taskbar(false);
         let _ = window.show();
         let _ = window.unminimize();
@@ -114,16 +135,23 @@ fn open_main_window(app: tauri::AppHandle) {
 }
 
 #[tauri::command]
+fn suppress_quick_auto_hide(duration_ms: u64) {
+    let capped_duration = duration_ms.min(10_000);
+    let until = current_epoch_ms().saturating_add(capped_duration);
+    QUICK_AUTO_HIDE_SUPPRESSED_UNTIL_MS.fetch_max(until, Ordering::Relaxed);
+}
+
+#[tauri::command]
 fn resize_quick_window(
     app: tauri::AppHandle,
-    width: f64,
+    _width: f64,
     height: f64,
 ) -> Result<QuickWindowResizeResult, String> {
     let quick_window = app
         .get_webview_window("quick")
         .ok_or_else(|| "Quick window is not available.".to_string())?;
 
-    let mut target_width = width.max(360.0);
+    let mut target_width = QUICK_WINDOW_FIXED_WIDTH;
     let mut target_height = height.max(72.0);
 
     let monitor = quick_window
@@ -135,10 +163,31 @@ fn resize_quick_window(
     if let (Some(monitor), Ok(window_position)) = (monitor, quick_window.outer_position()) {
         let monitor_position = monitor.position();
         let monitor_size = monitor.size();
+        let min_y = monitor_position.y as f64;
+        let mut current_y = window_position.y as f64;
         let max_width_from_position =
             (monitor_position.x + monitor_size.width as i32 - window_position.x).max(360) as f64;
-        let max_height_from_position =
-            (monitor_position.y + monitor_size.height as i32 - window_position.y).max(72) as f64;
+
+        let compute_max_height_from_y = |y: f64| {
+            (min_y + monitor_size.height as f64 - y - QUICK_WINDOW_BOTTOM_INSET).max(72.0)
+        };
+
+        let mut max_height_from_position = compute_max_height_from_y(current_y);
+
+        // If there is not enough space below, move the window up before resizing.
+        if target_height > max_height_from_position {
+            let overflow = target_height - max_height_from_position;
+            let new_y = (current_y - overflow).max(min_y);
+
+            if (new_y - current_y).abs() >= 1.0 {
+                let _ = quick_window.set_position(Position::Physical(
+                    PhysicalPosition::new(window_position.x, new_y.round() as i32),
+                ));
+
+                current_y = new_y;
+                max_height_from_position = compute_max_height_from_y(current_y);
+            }
+        }
 
         target_width = target_width.min(max_width_from_position);
         target_height = target_height.min(max_height_from_position);
@@ -274,8 +323,11 @@ pub fn run() {
         .on_window_event(|window, event| {
             if let WindowEvent::Focused(false) = event {
                 if window.label() == "quick" {
-                    let _ = window.hide();
-                    let _ = window.set_skip_taskbar(true);
+                    if !is_quick_auto_hide_suppressed() {
+                        let _ = window.hide();
+                        let _ = window.set_skip_taskbar(true);
+                    }
+
                     return;
                 }
             }
@@ -312,7 +364,7 @@ pub fn run() {
 
             let mut tray_builder = TrayIconBuilder::with_id("main-tray")
                 .menu(&tray_menu)
-                .tooltip("aids")
+                .tooltip("daisy")
                 .show_menu_on_left_click(false);
 
             if let Some(icon) = app.default_window_icon().cloned() {
@@ -322,6 +374,9 @@ pub fn run() {
             let _tray = tray_builder.build(app)?;
 
             if let Some(main_window) = app.get_webview_window("main") {
+                if let Some(icon) = app.default_window_icon().cloned() {
+                    let _ = main_window.set_icon(icon);
+                }
                 let _ = main_window.hide();
                 let _ = main_window.set_skip_taskbar(true);
             }
@@ -338,6 +393,7 @@ pub fn run() {
             get_api_key_preview,
             get_latest_clipboard_capture,
             open_main_window,
+            suppress_quick_auto_hide,
             resize_quick_window,
             run_agent,
             run_agent_stream

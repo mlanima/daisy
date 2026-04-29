@@ -19,8 +19,11 @@ export function SwitchField({
     className,
     ...props
 }: Readonly<SwitchFieldProps>) {
+    const isDisabled = Boolean((props as any).disabled);
+
     const classes = [
-        "flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-card/75 px-3 py-2.5",
+        "flex items-center justify-between gap-3 rounded-xl border border-border/75 bg-card px-3 py-2.5 shadow-sm",
+        isDisabled ? "cursor-not-allowed" : "cursor-pointer",
         className ?? "",
     ]
         .filter(Boolean)
@@ -41,8 +44,10 @@ export function SwitchField({
 
             <span
                 aria-hidden
-                className="relative h-6 w-11 rounded-full border border-border/80 bg-muted transition before:absolute before:left-0.5 before:top-0.5 before:h-5 before:w-5 before:rounded-full before:bg-background before:shadow before:transition peer-checked:border-primary/70 peer-checked:bg-primary/85 peer-checked:before:translate-x-5 peer-disabled:opacity-60"
-            />
+                className="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border border-border/80 bg-muted/80 p-0.5 transition-colors duration-200 peer-checked:border-primary/65 peer-checked:bg-primary/88 peer-disabled:opacity-60 peer-checked:[&>span]:translate-x-5"
+            >
+                <span className="h-5 w-5 rounded-full bg-background shadow-md ring-1 ring-black/5 transition-transform duration-200" />
+            </span>
         </label>
     );
 }

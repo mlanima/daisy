@@ -13,6 +13,39 @@ pub struct StateStore {
 }
 
 impl StateStore {
+    fn normalize_snapshot(snapshot: AppStateSnapshot) -> AppStateSnapshot {
+        if snapshot.agents.is_empty() {
+            let default_snapshot = AppStateSnapshot::default();
+
+            return AppStateSnapshot {
+                agents: default_snapshot.agents,
+                selected_agent_id: default_snapshot.selected_agent_id,
+                settings: snapshot.settings,
+                api_key: snapshot.api_key,
+            };
+        }
+
+        let selected_agent_is_valid = snapshot
+            .selected_agent_id
+            .as_ref()
+            .is_some_and(|selected_agent_id| {
+                snapshot
+                    .agents
+                    .iter()
+                    .any(|agent| agent.id == *selected_agent_id)
+            });
+
+        if selected_agent_is_valid {
+            return snapshot;
+        }
+
+        let mut repaired_snapshot = snapshot;
+        repaired_snapshot.selected_agent_id =
+            repaired_snapshot.agents.first().map(|agent| agent.id.clone());
+
+        repaired_snapshot
+    }
+
     pub fn new(app: &AppHandle) -> Result<Self, Box<dyn std::error::Error>> {
         let mut app_data_dir = app.path().app_data_dir()?;
         fs::create_dir_all(&app_data_dir)?;
@@ -33,7 +66,10 @@ impl StateStore {
             Err(_) => return AppStateSnapshot::default(),
         };
 
-        serde_json::from_str::<AppStateSnapshot>(&file_content).unwrap_or_default()
+        let parsed_snapshot = serde_json::from_str::<AppStateSnapshot>(&file_content)
+            .unwrap_or_default();
+
+        Self::normalize_snapshot(parsed_snapshot)
     }
 
     pub fn get(&self) -> Result<AppStateSnapshot, String> {
@@ -49,15 +85,17 @@ impl StateStore {
             .lock()
             .map_err(|error| format!("Failed to lock app state: {error}"))?;
 
-        let serialized = serde_json::to_string_pretty(&new_snapshot)
+        let normalized_snapshot = Self::normalize_snapshot(new_snapshot);
+
+        let serialized = serde_json::to_string_pretty(&normalized_snapshot)
             .map_err(|error| format!("Failed to serialize app state: {error}"))?;
 
         fs::write(&self.file_path, serialized)
             .map_err(|error| format!("Failed to persist app state: {error}"))?;
 
-        *snapshot = new_snapshot.clone();
+        *snapshot = normalized_snapshot.clone();
 
-        Ok(new_snapshot)
+        Ok(normalized_snapshot)
     }
 
     pub fn set_latest_clipboard_capture(

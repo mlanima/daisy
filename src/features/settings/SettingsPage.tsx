@@ -1,31 +1,10 @@
-import { useFormStatus } from "react-dom";
 import { ArrowLeft } from "lucide-react";
-import { Button, Card, SwitchField } from "../../shared/components";
-import { WINDOW_SIZE_LABELS } from "./windowSizeLabels";
+import { Button } from "../../shared/components";
+import { ApiCredentialsCard } from "./components/ApiCredentialsCard";
+import { ApiCredentialsModal } from "./components/ApiCredentialsModal";
+import { BehaviorAppearanceCard } from "./components/BehaviorAppearanceCard";
 import { useSettingsApiKey } from "./useSettingsApiKey";
 import type { SettingsPageProps } from "./types";
-
-const controlClass =
-    "w-full rounded-xl border border-input/85 bg-background/70 px-3 py-2.5 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55 disabled:cursor-not-allowed disabled:opacity-50";
-
-interface SaveKeyButtonProps {
-    canSubmit: boolean;
-}
-
-/** Submit button that reflects pending state from the nearest parent form. */
-function SaveKeyButton({ canSubmit }: Readonly<SaveKeyButtonProps>) {
-    const { pending } = useFormStatus();
-
-    return (
-        <Button
-            variant="primary"
-            type="submit"
-            disabled={pending || !canSubmit}
-        >
-            {pending ? "Saving..." : "Save"}
-        </Button>
-    );
-}
 
 /**
  * Renders user-facing settings for model behavior, display preferences,
@@ -59,11 +38,11 @@ export function SettingsPage({
     });
 
     return (
-        <div className="grid gap-5">
-            <div className="flex items-start gap-3 rounded-2xl border border-border/70 bg-card/75 p-4 md:items-center">
+        <div className="grid h-full min-h-0 grid-rows-[auto_auto_minmax(0,1fr)] gap-5">
+            <div className="flex items-start gap-3 rounded-2xl border border-border/70 bg-card p-4 shadow-sm md:items-center">
                 <Button
                     variant="ghost"
-                    className="h-14 w-14 p-0 text-muted-foreground !border-transparent !bg-transparent hover:!border-transparent hover:!bg-transparent hover:text-foreground hover:scale-110"
+                    className="h-14 w-14 p-0 text-muted-foreground border-transparent! bg-transparent! hover:border-transparent! hover:bg-transparent! hover:text-foreground hover:scale-110"
                     aria-label="Back to assistant"
                     onClick={onBack}
                 >
@@ -81,297 +60,36 @@ export function SettingsPage({
             </div>
 
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                <Card className="flex flex-col gap-4">
-                    <div>
-                        <h3 className="text-base font-semibold">
-                            API Credentials
-                        </h3>
-                        <p className="text-xs text-muted-foreground">
-                            Your key is stored securely and used for requests.
-                        </p>
-                    </div>
+                <ApiCredentialsCard
+                    keyPreview={keyPreview}
+                    isSavingKey={isSavingKey}
+                    onOpenKeyModal={openKeyModal}
+                    onClearKey={clearKey}
+                />
 
-                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border/70 bg-background/60 p-3">
-                        <span className="font-mono text-sm text-muted-foreground">
-                            {keyPreview === "<loading>"
-                                ? "Loading..."
-                                : keyPreview}
-                        </span>
-                        <div className="flex flex-wrap items-center gap-2">
-                            <Button variant="primary" onClick={openKeyModal}>
-                                Set Secret Key
-                            </Button>
-                            {keyPreview !== "<not found>" &&
-                            keyPreview !== "<loading>" ? (
-                                <Button
-                                    variant="ghost"
-                                    danger
-                                    disabled={isSavingKey}
-                                    onClick={clearKey}
-                                >
-                                    Clear Key
-                                </Button>
-                            ) : null}
-                        </div>
-                    </div>
-
-                    <details
-                        className="group rounded-xl border border-border/70 bg-background/55"
-                        open={showAdvanced}
-                    >
-                        <summary
-                            className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 [::-webkit-details-marker]:hidden"
-                            onClick={(event) => {
-                                event.preventDefault();
-                                toggleAdvanced();
-                            }}
-                        >
-                            <span className="text-sm font-medium">
-                                Advanced Model Settings
-                            </span>
-                            <span className="text-xs text-muted-foreground transition group-open:rotate-90">
-                                ▸
-                            </span>
-                        </summary>
-
-                        <div className="grid gap-3 border-t border-border/70 p-3">
-                            <label
-                                htmlFor="global-model"
-                                className="text-xs font-medium text-muted-foreground"
-                            >
-                                Model
-                            </label>
-                            <input
-                                id="global-model"
-                                className={controlClass}
-                                value={settings.model.model}
-                                onChange={(event) =>
-                                    onUpdateSettings({
-                                        ...settings,
-                                        model: {
-                                            ...settings.model,
-                                            model: event.target.value,
-                                        },
-                                    })
-                                }
-                                placeholder="gpt-4o-mini"
-                            />
-
-                            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                                <div>
-                                    <label
-                                        htmlFor="global-temp"
-                                        className="text-xs font-medium text-muted-foreground"
-                                    >
-                                        Temperature
-                                    </label>
-                                    <input
-                                        id="global-temp"
-                                        className={`${controlClass} mt-1`}
-                                        type="number"
-                                        min={0}
-                                        max={2}
-                                        step={0.1}
-                                        value={settings.model.temperature}
-                                        onChange={(event) =>
-                                            onUpdateSettings({
-                                                ...settings,
-                                                model: {
-                                                    ...settings.model,
-                                                    temperature: Number(
-                                                        event.target.value,
-                                                    ),
-                                                },
-                                            })
-                                        }
-                                    />
-                                </div>
-
-                                <div>
-                                    <label
-                                        htmlFor="global-max-tokens"
-                                        className="text-xs font-medium text-muted-foreground"
-                                    >
-                                        Max Tokens
-                                    </label>
-                                    <input
-                                        id="global-max-tokens"
-                                        className={`${controlClass} mt-1`}
-                                        type="number"
-                                        min={1}
-                                        step={1}
-                                        value={settings.model.maxTokens ?? ""}
-                                        onChange={(event) =>
-                                            onUpdateSettings({
-                                                ...settings,
-                                                model: {
-                                                    ...settings.model,
-                                                    maxTokens: event.target
-                                                        .value
-                                                        ? Number(
-                                                              event.target
-                                                                  .value,
-                                                          )
-                                                        : null,
-                                                },
-                                            })
-                                        }
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </details>
-                </Card>
-
-                <Card className="flex flex-col gap-4">
-                    <div>
-                        <h3 className="text-base font-semibold">
-                            Behavior & Appearance
-                        </h3>
-                        <p className="text-xs text-muted-foreground">
-                            Adjust interaction flow and text scaling.
-                        </p>
-                    </div>
-
-                    <label
-                        className="flex flex-col gap-1.5"
-                        htmlFor="toggle-window-size"
-                    >
-                        <span className="text-xs font-medium text-muted-foreground">
-                            UI Text Size
-                        </span>
-                        <select
-                            id="toggle-window-size"
-                            className={controlClass}
-                            value={settings.windowSize}
-                            onChange={(event) =>
-                                onUpdateSettings({
-                                    ...settings,
-                                    windowSize: event.target
-                                        .value as keyof typeof WINDOW_SIZE_LABELS,
-                                })
-                            }
-                        >
-                            {Object.entries(WINDOW_SIZE_LABELS).map(
-                                ([value, label]) => (
-                                    <option key={value} value={value}>
-                                        {label}
-                                    </option>
-                                ),
-                            )}
-                        </select>
-                    </label>
-
-                    <SwitchField
-                        id="toggle-auto-send"
-                        label="Auto-send captured prompts"
-                        checked={settings.autoSendPrompt}
-                        onChange={(checked) =>
-                            onUpdateSettings({
-                                ...settings,
-                                autoSendPrompt: checked,
-                            })
-                        }
-                    />
-
-                    <SwitchField
-                        id="toggle-dark-mode"
-                        label="Dark mode"
-                        checked={settings.darkMode}
-                        onChange={(checked) =>
-                            onUpdateSettings({
-                                ...settings,
-                                darkMode: checked,
-                            })
-                        }
-                    />
-                </Card>
+                <BehaviorAppearanceCard
+                    settings={settings}
+                    onUpdateSettings={onUpdateSettings}
+                    showAdvanced={showAdvanced}
+                    onToggleAdvanced={toggleAdvanced}
+                />
             </div>
 
-            {showKeyModal ? (
-                <div className="fixed inset-0 z-50 grid place-content-center bg-black/60 p-3 backdrop-blur-sm">
-                    <Button
-                        variant="unstyled"
-                        className="absolute inset-0 z-0"
-                        aria-label="Close API key dialog"
-                        onClick={closeKeyModal}
-                    />
+            <div className="grid min-h-0 place-items-center">
+                <div className="settings-footer-logo h-full w-full max-h-48 max-w-48" />
+            </div>
 
-                    <div className="relative z-10 flex w-full max-w-md flex-col gap-4 rounded-3xl border border-border/70 bg-card/95 p-6 shadow-2xl backdrop-blur animate-[shell-enter_180ms_cubic-bezier(0.2,0.8,0.2,1)]">
-                        <h2 className="text-2xl font-semibold tracking-tight">
-                            Set Secret Key
-                        </h2>
-
-                        <form
-                            action={saveKeyAction}
-                            className="flex flex-col gap-3"
-                        >
-                            <label
-                                htmlFor="modal-api-key"
-                                className="text-sm font-medium"
-                            >
-                                API Key
-                            </label>
-                            <input
-                                id="modal-api-key"
-                                name="apiKey"
-                                type="password"
-                                className={controlClass}
-                                value={apiKeyDraft}
-                                onChange={(event) =>
-                                    setApiKeyDraft(event.target.value)
-                                }
-                                placeholder="sk-..."
-                                autoFocus
-                            />
-
-                            <label
-                                htmlFor="modal-api-endpoint"
-                                className="text-sm font-medium"
-                            >
-                                API Endpoint
-                            </label>
-                            <input
-                                id="modal-api-endpoint"
-                                type="url"
-                                className={controlClass}
-                                value={settings.apiBaseUrl}
-                                onChange={(event) =>
-                                    onUpdateSettings({
-                                        ...settings,
-                                        apiBaseUrl: event.target.value,
-                                    })
-                                }
-                                placeholder="https://api.openai.com/v1/chat/completions"
-                            />
-
-                            {saveError ? (
-                                <p
-                                    role="alert"
-                                    className="text-sm text-rose-600 dark:text-rose-300"
-                                >
-                                    {saveError}
-                                </p>
-                            ) : null}
-
-                            <div className="mt-1 flex gap-2">
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    className="flex-1"
-                                    onClick={closeKeyModal}
-                                    disabled={isSavingKey}
-                                >
-                                    Cancel
-                                </Button>
-                                <SaveKeyButton
-                                    canSubmit={Boolean(apiKeyDraft.trim())}
-                                />
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            ) : null}
+            <ApiCredentialsModal
+                isOpen={showKeyModal}
+                apiKeyDraft={apiKeyDraft}
+                isSavingKey={isSavingKey}
+                saveError={saveError}
+                settings={settings}
+                onUpdateSettings={onUpdateSettings}
+                onClose={closeKeyModal}
+                onApiKeyDraftChange={setApiKeyDraft}
+                saveKeyAction={saveKeyAction}
+            />
         </div>
     );
 }

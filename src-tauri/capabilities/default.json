@@ -3,5 +3,15 @@
     "identifier": "default",
     "description": "Capability for app windows",
     "windows": ["main", "quick"],
-    "permissions": ["core:default", "opener:default"]
+    "permissions": [
+        "core:default",
+        "core:window:allow-hide",
+        "core:window:allow-close",
+        "core:window:allow-is-maximized",
+        "core:window:allow-minimize",
+        "core:window:allow-toggle-maximize",
+        "core:window:allow-start-dragging",
+        "core:window:allow-start-resize-dragging",
+        "opener:default"
+    ]
 }
